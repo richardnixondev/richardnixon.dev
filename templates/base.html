@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}richardnixon.dev{% endblock %}</title>
+
+    {% block meta %}
+    <meta name="description" content="{% block meta_description %}Personal platform - Blog, Portfolio, and Dashboards{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}developer, software engineer, blog, portfolio{% endblock %}">
+    {% endblock %}
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}richardnixon.dev{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Personal platform{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% load static %}{% static 'images/favicon.svg' %}">
+
+    <!-- TailwindCSS via CDN (replace with compiled version in production) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Syntax highlighting for code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* Prose styles for markdown content */
+        .prose pre { background: #1f2937; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        .prose code { background: #374151; padding: 0.125rem 0.25rem; border-radius: 0.25rem; }
+        .prose pre code { background: transparent; padding: 0; }
+
+        /* HTMX loading indicator */
+        .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+        .htmx-request .htmx-indicator { opacity: 1; }
+        .htmx-request.htmx-indicator { opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col" x-data="{ mobileMenu: false }">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'blog:home' %}" class="text-xl font-bold text-primary-400 hover:text-primary-300 transition">
+                        richardnixon.dev
+                    </a>
+                    <div class="hidden md:ml-10 md:flex md:space-x-8">
+                        <a href="{% url 'blog:post_list' %}" class="text-gray-300 hover:text-white px-3 py-2 transition {% if request.resolver_match.url_name == 'post_list' %}text-white border-b-2 border-primary-500{% endif %}">
+                            Blog
+                        </a>
+                        <a href="{% url 'portfolio:project_list' %}" class="text-gray-300 hover:text-white px-3 py-2 transition {% if 'portfolio' in request.resolver_match.app_name %}text-white border-b-2 border-primary-500{% endif %}">
+                            Portfolio
+                        </a>
+                        <a href="{% url 'dashboards:dashboard_list' %}" class="text-gray-300 hover:text-white px-3 py-2 transition {% if 'dashboards' in request.resolver_match.app_name %}text-white border-b-2 border-primary-500{% endif %}">
+                            Dashboards
+                        </a>
+                        <a href="{% url 'contact:contact' %}" class="text-gray-300 hover:text-white px-3 py-2 transition {% if 'contact' in request.resolver_match.app_name %}text-white border-b-2 border-primary-500{% endif %}">
+                            Contact
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <span class="text-gray-400 text-sm hidden md:inline">{{ user.get_short_name }}</span>
+                        {% if user.is_staff %}
+                            <a href="{% url 'admin:index' %}" class="text-gray-300 hover:text-white text-sm">Admin</a>
+                        {% endif %}
+                        <a href="{% url 'account_logout' %}" class="text-gray-300 hover:text-white text-sm">Logout</a>
+                    {% else %}
+                        <a href="{% url 'account_login' %}" class="text-gray-300 hover:text-white text-sm">Login</a>
+                    {% endif %}
+
+                    <!-- Mobile menu button -->
+                    <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path x-show="!mobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            <path x-show="mobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div x-show="mobileMenu" x-cloak class="md:hidden bg-gray-800 border-t border-gray-700">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="{% url 'blog:post_list' %}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">Blog</a>
+                <a href="{% url 'portfolio:project_list' %}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">Portfolio</a>
+                <a href="{% url 'dashboards:dashboard_list' %}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">Dashboards</a>
+                <a href="{% url 'contact:contact' %}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="mb-2 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-900 text-red-100{% elif message.tags == 'success' %}bg-green-900 text-green-100{% else %}bg-blue-900 text-blue-100{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 border-t border-gray-700 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">richardnixon.dev</h3>
+                    <p class="text-gray-400 text-sm">
+                        Personal platform for sharing thoughts, projects, and data.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'blog:feed' %}" class="text-gray-400 hover:text-white text-sm">RSS Feed</a></li>
+                        <li><a href="{% url 'contact:resume_download' %}" class="text-gray-400 hover:text-white text-sm">Download Resume</a></li>
+                        <li><a href="https://github.com/richardnixondev" target="_blank" rel="noopener" class="text-gray-400 hover:text-white text-sm">GitHub</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Connect</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'contact:contact' %}" class="text-gray-400 hover:text-white text-sm">Contact Form</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-gray-500 text-sm">
+                &copy; {% now "Y" %} richardnixon.dev. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Initialize syntax highlighting -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
