@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Suggest Change - {{ dashboard.title }} - richardnixon.dev{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <a href="{{ dashboard.get_absolute_url }}" class="text-primary-400 hover:text-primary-300 transition text-sm mb-4 inline-block">
+        &larr; Back to {{ dashboard.title }}
+    </a>
+
+    <h1 class="text-3xl font-bold text-white mb-2">Suggest a Change</h1>
+    <p class="text-gray-400 mb-8">
+        Help improve this dashboard by suggesting data updates, new widgets, or reporting issues.
+    </p>
+
+    <form method="post" class="bg-gray-800 rounded-lg p-6">
+        {% csrf_token %}
+
+        <div class="space-y-6">
+            <div>
+                <label for="id_suggestion_type" class="block text-sm font-medium text-gray-300 mb-2">Type</label>
+                <select name="suggestion_type" id="id_suggestion_type"
+                        class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                    <option value="data">Data Update</option>
+                    <option value="widget">New Widget</option>
+                    <option value="bug">Bug Report</option>
+                    <option value="feature">Feature Request</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="id_title" class="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                <input type="text" name="title" id="id_title" required
+                       class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                       placeholder="Brief summary of your suggestion">
+            </div>
+
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea name="description" id="id_description" rows="5" required
+                          class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Provide details about your suggestion..."></textarea>
+            </div>
+
+            <div>
+                <label for="id_data" class="block text-sm font-medium text-gray-300 mb-2">
+                    Additional Data (JSON, optional)
+                </label>
+                <textarea name="data" id="id_data" rows="3"
+                          class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+                          placeholder='{"source": "url", "values": []}'></textarea>
+                <p class="mt-1 text-gray-500 text-sm">
+                    If you have specific data to suggest, provide it as JSON.
+                </p>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition">
+                Submit Suggestion
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

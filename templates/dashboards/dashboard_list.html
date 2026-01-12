@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboards - richardnixon.dev{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h1 class="text-3xl font-bold text-white mb-4">Dashboards</h1>
+    <p class="text-gray-400 mb-8 max-w-2xl">
+        Interactive data visualizations and public datasets. Explore, analyze, and suggest improvements.
+    </p>
+
+    <!-- Featured Dashboards -->
+    {% if featured_dashboards %}
+    <section class="mb-12">
+        <h2 class="text-xl font-semibold text-white mb-6">Featured</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {% for dashboard in featured_dashboards %}
+            <a href="{{ dashboard.get_absolute_url }}"
+               class="bg-gradient-to-br from-primary-600/20 to-primary-800/20 border border-primary-500/30 rounded-lg p-6 hover:border-primary-500 transition group">
+                <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-primary-400 transition">
+                    {{ dashboard.title }}
+                </h3>
+                <p class="text-gray-400 text-sm mb-4">{{ dashboard.description|truncatewords:20 }}</p>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500">{{ dashboard.widgets.count }} widgets</span>
+                    <span class="text-primary-400">View &rarr;</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- All Dashboards -->
+    <section>
+        {% if featured_dashboards %}
+        <h2 class="text-xl font-semibold text-white mb-6">All Dashboards</h2>
+        {% endif %}
+
+        {% if dashboards %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for dashboard in dashboards %}
+            <a href="{{ dashboard.get_absolute_url }}"
+               class="bg-gray-800 rounded-lg p-6 hover:ring-2 hover:ring-primary-500 transition group">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-semibold text-white group-hover:text-primary-400 transition">
+                        {{ dashboard.title }}
+                    </h3>
+                    {% if dashboard.visibility == 'private' %}
+                    <span class="text-xs px-2 py-1 bg-yellow-600/20 text-yellow-400 rounded">Private</span>
+                    {% elif dashboard.visibility == 'registered' %}
+                    <span class="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 rounded">Members</span>
+                    {% endif %}
+                </div>
+                <p class="text-gray-400 text-sm mb-4">{{ dashboard.description|truncatewords:15 }}</p>
+                <div class="flex justify-between items-center text-sm text-gray-500">
+                    <span>{{ dashboard.widgets.count }} widgets</span>
+                    <span>Updated {{ dashboard.updated_at|timesince }} ago</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <p class="text-gray-400">No dashboards available yet.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
