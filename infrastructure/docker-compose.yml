@@ -3,13 +3,16 @@ services:
   # NGINX PROXY + SSL (Traefik)
   # ===========================================
   traefik:
-    image: traefik:v3.3
+    image: traefik:latest
     container_name: traefik
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - DOCKER_API_VERSION=1.45
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
       - traefik-certificates:/letsencrypt
@@ -20,6 +23,7 @@ services:
       - wordpress-internal
       - crowdsec
       - monitoring
+      - valheim-net
 
   # ===========================================
   # WORDPRESS - richardemanu.com
@@ -458,6 +462,17 @@ services:
       - "traefik.http.routers.valheim-status.entrypoints=websecure"
       - "traefik.http.routers.valheim-status.tls.certresolver=letsencrypt"
       - "traefik.http.services.valheim-status.loadbalancer.server.port=80"
+
+  valheim-metrics:
+    image: ghcr.io/adaliszk/valheim-server-monitoring:metrics
+    container_name: valheim-metrics
+    restart: unless-stopped
+    depends_on:
+      - valheim
+    volumes:
+      - valheim-logs:/var/log/valheim:ro
+    networks:
+      - monitoring
 
 networks:
   web:
