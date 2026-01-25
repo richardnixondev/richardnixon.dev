@@ -1,4 +1,7 @@
 from django import forms
+from django.conf import settings
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV3
 from .models import ContactMessage
 
 
@@ -17,6 +20,9 @@ class ContactForm(forms.ModelForm):
 
     # Hidden timestamp field for timing check
     form_time = forms.FloatField(widget=forms.HiddenInput(), required=False)
+
+    # reCAPTCHA v3 field (invisible)
+    captcha = ReCaptchaField(widget=ReCaptchaV3())
 
     class Meta:
         model = ContactMessage

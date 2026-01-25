@@ -58,6 +58,12 @@
                         {% endif %}
                     </div>
 
+                    <!-- reCAPTCHA v3 (invisible) -->
+                    {{ form.captcha }}
+                    {% if form.captcha.errors %}
+                    <p class="text-sm text-red-400">{{ form.captcha.errors.0 }}</p>
+                    {% endif %}
+
                     <button type="submit"
                             class="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition">
                         {% trans "Send Message" %}

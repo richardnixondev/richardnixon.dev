@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'two_factor',
     'two_factor.plugins.phonenumber',
 
+    # reCAPTCHA
+    'django_recaptcha',
+
     # Local apps
     'apps.accounts',
     'apps.blog',
@@ -319,3 +322,8 @@ CKEDITOR_5_CONFIGS = {
         },
     },
 }
+
+# reCAPTCHA v3 settings
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', '')
+RECAPTCHA_REQUIRED_SCORE = 0.5  # Score threshold (0.0 - 1.0)
