@@ -427,13 +427,19 @@ services:
       BACKUPS: "true"
       BACKUPS_INTERVAL: "43200"
       BACKUPS_MAX_AGE: "7"
+      SUPERVISOR_HTTP: "true"
+      SUPERVISOR_HTTP_PORT: "9001"
+      STATUS_HTTP: "true"
+      STATUS_HTTP_PORT: "8080"
     volumes:
       - valheim-config:/config
       - valheim-data:/opt/valheim
+      - valheim-logs:/var/log/valheim
     ports:
       - "2456-2458:2456-2458/udp"
     networks:
       - valheim-net
+      - monitoring
 
 networks:
   web:
@@ -467,5 +473,6 @@ volumes:
   portainer-data:
   valheim-config:
   valheim-data:
+  valheim-logs:
   crowdsec-db:
   crowdsec-config:
