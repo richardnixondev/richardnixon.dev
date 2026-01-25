@@ -441,6 +441,24 @@ services:
       - valheim-net
       - monitoring
 
+  valheim-status:
+    build:
+      context: ./valheim-status
+      dockerfile: Dockerfile
+    container_name: valheim-status
+    restart: unless-stopped
+    depends_on:
+      - valheim
+    networks:
+      - web
+      - valheim-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.valheim-status.rule=Host(`valheim.richardnixon.dev`)"
+      - "traefik.http.routers.valheim-status.entrypoints=websecure"
+      - "traefik.http.routers.valheim-status.tls.certresolver=letsencrypt"
+      - "traefik.http.services.valheim-status.loadbalancer.server.port=80"
+
 networks:
   web:
     driver: bridge
