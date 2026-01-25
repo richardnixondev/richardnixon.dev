@@ -55,7 +55,7 @@ services:
       WORDPRESS_DB_PASSWORD: ${WP_DB_PASSWORD}
     volumes:
       - wordpress-data:/var/www/html
-      - ./wp-content:/var/www/html/wp-content
+      - /root/data/wp-content:/var/www/html/wp-content
     networks:
       - web
       - wordpress-internal
