@@ -175,7 +175,7 @@ docker exec crowdsec cscli alerts list
 | Protection | Configuration |
 |------------|---------------|
 | Fail2ban | 3 attempts = 24h ban |
-| GeoIP | Only Ireland (IE) allowed |
+| GeoIP | Country-based filtering |
 | CrowdSec | SSH brute-force detection |
 
 ### Firewall Rules
