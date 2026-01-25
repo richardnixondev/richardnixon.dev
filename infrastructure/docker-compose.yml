@@ -13,10 +13,12 @@ services:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
       - traefik-certificates:/letsencrypt
+      - traefik-logs:/var/log/traefik
     networks:
       - web
       - platform-internal
       - wordpress-internal
+      - crowdsec
 
   # ===========================================
   # WORDPRESS - richardemanu.com
@@ -117,6 +119,9 @@ services:
       CELERY_BROKER_URL: redis://platform-redis:6379/1
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
+      RECAPTCHA_PUBLIC_KEY: ${RECAPTCHA_PUBLIC_KEY:-}
+      RECAPTCHA_PRIVATE_KEY: ${RECAPTCHA_PRIVATE_KEY:-}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     volumes:
       - platform-static:/app/staticfiles
       - platform-media:/app/media
@@ -309,6 +314,40 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   # ===========================================
+  # CROWDSEC - Security & IPS
+  # ===========================================
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    container_name: crowdsec
+    restart: unless-stopped
+    environment:
+      COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/whitelist-good-actors crowdsecurity/linux"
+      GID: "${GID-1000}"
+      BOUNCER_KEY_traefik: ${CROWDSEC_BOUNCER_KEY:-}
+    volumes:
+      - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - crowdsec-db:/var/lib/crowdsec/data/
+      - crowdsec-config:/etc/crowdsec/
+      - /var/log:/var/log:ro
+      - traefik-logs:/logs/traefik:ro
+    networks:
+      - crowdsec
+
+  crowdsec-bouncer:
+    image: fbonalair/traefik-crowdsec-bouncer:latest
+    container_name: crowdsec-bouncer
+    restart: unless-stopped
+    environment:
+      CROWDSEC_BOUNCER_API_KEY: ${CROWDSEC_BOUNCER_KEY:-}
+      CROWDSEC_AGENT_HOST: crowdsec:8080
+      GIN_MODE: release
+    networks:
+      - crowdsec
+      - web
+    depends_on:
+      - crowdsec
+
+  # ===========================================
   # PORTAINER - Docker Management
   # ===========================================
   portainer:
@@ -363,11 +402,14 @@ networks:
     driver: bridge
   monitoring:
     driver: bridge
+  crowdsec:
+    driver: bridge
   valheim-net:
     driver: bridge
 
 volumes:
   traefik-certificates:
+  traefik-logs:
   wordpress-db-data:
   wordpress-data:
   platform-db-data:
@@ -381,3 +423,5 @@ volumes:
   portainer-data:
   valheim-config:
   valheim-data:
+  crowdsec-db:
+  crowdsec-config:

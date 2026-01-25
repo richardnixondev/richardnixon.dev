@@ -1,10 +1,18 @@
 http:
+  middlewares:
+    crowdsec-bouncer:
+      forwardAuth:
+        address: http://crowdsec-bouncer:8080/api/v1/forwardAuth
+        trustForwardHeader: true
+
   routers:
     platform:
       rule: "Host(`richardnixon.dev`) || Host(`www.richardnixon.dev`)"
       entryPoints:
         - websecure
       service: platform
+      middlewares:
+        - crowdsec-bouncer
       tls:
         certResolver: letsencrypt
 
@@ -13,6 +21,8 @@ http:
       entryPoints:
         - websecure
       service: wordpress
+      middlewares:
+        - crowdsec-bouncer
       tls:
         certResolver: letsencrypt
 
@@ -21,6 +31,8 @@ http:
       entryPoints:
         - websecure
       service: umami
+      middlewares:
+        - crowdsec-bouncer
       tls:
         certResolver: letsencrypt
 
@@ -29,6 +41,8 @@ http:
       entryPoints:
         - websecure
       service: portainer
+      middlewares:
+        - crowdsec-bouncer
       tls:
         certResolver: letsencrypt
 
@@ -37,6 +51,8 @@ http:
       entryPoints:
         - websecure
       service: grafana
+      middlewares:
+        - crowdsec-bouncer
       tls:
         certResolver: letsencrypt
 
