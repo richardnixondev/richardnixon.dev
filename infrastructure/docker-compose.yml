@@ -425,8 +425,10 @@ services:
       - sys_nice
     environment:
       SERVER_NAME: "Emerald Realms"
-      WORLD_NAME: "MyWorld"
+      WORLD_NAME: "EmeraldRealms"
       SERVER_PASS: ${VALHEIM_PASSWORD}
+      ADMINLIST_IDS: "76561198083287760,76561198024907057"
+      PERMITTEDLIST_IDS: "76561198083287760,76561198024907057"
       SERVER_PUBLIC: "true"
       BACKUPS: "true"
       BACKUPS_INTERVAL: "43200"

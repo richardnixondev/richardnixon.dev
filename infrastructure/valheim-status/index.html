@@ -207,6 +207,43 @@
             color: #f87171;
         }
 
+        .players-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(74, 222, 128, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .players-section h3 {
+            color: #4ade80;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .players-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .player-tag {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-tag::before {
+            content: "⚔️";
+        }
+
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -262,6 +299,11 @@
                 </div>
             </div>
 
+            <div id="players-section" class="players-section" style="display: none;">
+                <h3>Online Players</h3>
+                <div id="players-list" class="players-list"></div>
+            </div>
+
             <div class="connect-section">
                 <h3>Connect to Server</h3>
                 <div class="connect-address">
@@ -297,17 +339,35 @@
                 // Update stats
                 document.getElementById('players').textContent =
                     `${data.player_count || 0} / 10`;
-                document.getElementById('world').textContent =
-                    data.world_name || 'Unknown';
-                document.getElementById('version').textContent =
-                    data.valheim_version || '-';
 
-                // Calculate uptime if available
-                if (data.server_uptime) {
-                    document.getElementById('uptime').textContent =
-                        formatUptime(data.server_uptime);
+                // World name is not in API, use configured name
+                document.getElementById('world').textContent = 'EmeraldRealms';
+
+                // Parse version from keywords (format: "g=0.221.6,n=35,m=")
+                let version = '-';
+                if (data.keywords) {
+                    const match = data.keywords.match(/g=([0-9.]+)/);
+                    if (match) version = match[1];
+                }
+                document.getElementById('version').textContent = version;
+
+                // Show uptime from API or fetch from uptime endpoint
+                fetchUptime();
+
+                // Show players list if any
+                const playersSection = document.getElementById('players-section');
+                const playersList = document.getElementById('players-list');
+
+                if (data.players && data.players.length > 0) {
+                    playersSection.style.display = 'block';
+                    playersList.innerHTML = data.players
+                        .map((p, i) => {
+                            const duration = p.duration ? formatDuration(p.duration) : '';
+                            return `<span class="player-tag">Viking ${i + 1}${duration ? ' (' + duration + ')' : ''}</span>`;
+                        })
+                        .join('');
                 } else {
-                    document.getElementById('uptime').textContent = 'Running';
+                    playersSection.style.display = 'none';
                 }
 
                 // Update server name if available
@@ -340,6 +400,29 @@
                 return `${hours}h ${minutes}m`;
             } else {
                 return `${minutes}m`;
+            }
+        }
+
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const hours = Math.floor(mins / 60);
+            if (hours > 0) {
+                return `${hours}h ${mins % 60}m`;
+            }
+            return `${mins}m`;
+        }
+
+        async function fetchUptime() {
+            try {
+                const response = await fetch('/api/uptime');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.uptime_seconds) {
+                        document.getElementById('uptime').textContent = formatUptime(data.uptime_seconds);
+                    }
+                }
+            } catch (e) {
+                document.getElementById('uptime').textContent = 'Running';
             }
         }
 
