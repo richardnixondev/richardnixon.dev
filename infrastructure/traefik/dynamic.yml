@@ -5,7 +5,25 @@ http:
         address: http://crowdsec-bouncer:8080/api/v1/forwardAuth
         trustForwardHeader: true
 
+    # Block sensitive WordPress files - replace with non-existent path
+    wp-block-sensitive:
+      replacePathRegex:
+        regex: ".*"
+        replacement: "/this-page-does-not-exist-blocked-by-security"
+
   routers:
+    # Block sensitive WordPress files
+    wordpress-blocked:
+      rule: "(Host(`richardemanu.com`) || Host(`www.richardemanu.com`)) && (Path(`/readme.html`) || Path(`/license.txt`) || Path(`/wp-config-sample.php`) || PathPrefix(`/wp-includes/`))"
+      entryPoints:
+        - websecure
+      service: wordpress
+      middlewares:
+        - wp-block-sensitive
+      priority: 100
+      tls:
+        certResolver: letsencrypt
+
     platform:
       rule: "Host(`richardnixon.dev`) || Host(`www.richardnixon.dev`)"
       entryPoints:
