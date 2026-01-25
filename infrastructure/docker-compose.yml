@@ -103,7 +103,7 @@ services:
 
   platform-web:
     build:
-      context: ./platform
+      context: ..
       dockerfile: docker/Dockerfile.full
     container_name: platform-web
     restart: unless-stopped
@@ -142,7 +142,7 @@ services:
 
   platform-celery:
     build:
-      context: ./platform
+      context: ..
       dockerfile: docker/Dockerfile
     container_name: platform-celery
     restart: unless-stopped
@@ -169,7 +169,7 @@ services:
 
   platform-celery-beat:
     build:
-      context: ./platform
+      context: ..
       dockerfile: docker/Dockerfile
     container_name: platform-celery-beat
     restart: unless-stopped
