@@ -1,0 +1,383 @@
+services:
+  # ===========================================
+  # NGINX PROXY + SSL (Traefik)
+  # ===========================================
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - traefik-certificates:/letsencrypt
+    networks:
+      - web
+      - platform-internal
+      - wordpress-internal
+
+  # ===========================================
+  # WORDPRESS - richardemanu.com
+  # ===========================================
+  wordpress-db:
+    image: mariadb:10.6
+    container_name: wordpress-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: richardemanu
+      MYSQL_USER: richardemanu
+      MYSQL_PASSWORD: ${WP_DB_PASSWORD}
+    volumes:
+      - wordpress-db-data:/var/lib/mysql
+    networks:
+      - wordpress-internal
+
+  wordpress:
+    image: wordpress:6-php8.2-apache
+    container_name: wordpress
+    restart: unless-stopped
+    depends_on:
+      - wordpress-db
+    environment:
+      WORDPRESS_DB_HOST: wordpress-db
+      WORDPRESS_DB_NAME: richardemanu
+      WORDPRESS_DB_USER: richardemanu
+      WORDPRESS_DB_PASSWORD: ${WP_DB_PASSWORD}
+    volumes:
+      - wordpress-data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+    networks:
+      - web
+      - wordpress-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wordpress.rule=Host(`richardemanu.com`) || Host(`www.richardemanu.com`)"
+      - "traefik.http.routers.wordpress.entrypoints=websecure"
+      - "traefik.http.routers.wordpress.tls.certresolver=letsencrypt"
+      - "traefik.http.services.wordpress.loadbalancer.server.port=80"
+
+  # ===========================================
+  # DJANGO PLATFORM - richardnixon.dev
+  # ===========================================
+  platform-db:
+    image: postgres:16-alpine
+    container_name: platform-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PLATFORM_DB_NAME:-platform}
+      POSTGRES_USER: ${PLATFORM_DB_USER:-platform}
+      POSTGRES_PASSWORD: ${PLATFORM_DB_PASSWORD}
+    volumes:
+      - platform-db-data:/var/lib/postgresql/data
+    networks:
+      - platform-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PLATFORM_DB_USER:-platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  platform-redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    restart: unless-stopped
+    volumes:
+      - platform-redis-data:/data
+    networks:
+      - platform-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  platform-web:
+    build:
+      context: ./platform
+      dockerfile: docker/Dockerfile.full
+    container_name: platform-web
+    restart: unless-stopped
+    depends_on:
+      platform-db:
+        condition: service_healthy
+      platform-redis:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      POSTGRES_DB: ${PLATFORM_DB_NAME:-platform}
+      POSTGRES_USER: ${PLATFORM_DB_USER:-platform}
+      POSTGRES_PASSWORD: ${PLATFORM_DB_PASSWORD}
+      POSTGRES_HOST: platform-db
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://platform-redis:6379/0
+      CELERY_BROKER_URL: redis://platform-redis:6379/1
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
+    volumes:
+      - platform-static:/app/staticfiles
+      - platform-media:/app/media
+    networks:
+      - web
+      - platform-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.platform.rule=Host(`richardnixon.dev`) || Host(`www.richardnixon.dev`)"
+      - "traefik.http.routers.platform.entrypoints=websecure"
+      - "traefik.http.routers.platform.tls.certresolver=letsencrypt"
+      - "traefik.http.services.platform.loadbalancer.server.port=8000"
+
+  platform-celery:
+    build:
+      context: ./platform
+      dockerfile: docker/Dockerfile
+    container_name: platform-celery
+    restart: unless-stopped
+    depends_on:
+      platform-db:
+        condition: service_healthy
+      platform-redis:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      POSTGRES_DB: ${PLATFORM_DB_NAME:-platform}
+      POSTGRES_USER: ${PLATFORM_DB_USER:-platform}
+      POSTGRES_PASSWORD: ${PLATFORM_DB_PASSWORD}
+      POSTGRES_HOST: platform-db
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://platform-redis:6379/0
+      CELERY_BROKER_URL: redis://platform-redis:6379/1
+    command: celery -A config worker -l info
+    volumes:
+      - platform-media:/app/media
+    networks:
+      - platform-internal
+
+  platform-celery-beat:
+    build:
+      context: ./platform
+      dockerfile: docker/Dockerfile
+    container_name: platform-celery-beat
+    restart: unless-stopped
+    depends_on:
+      platform-db:
+        condition: service_healthy
+      platform-redis:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      POSTGRES_DB: ${PLATFORM_DB_NAME:-platform}
+      POSTGRES_USER: ${PLATFORM_DB_USER:-platform}
+      POSTGRES_PASSWORD: ${PLATFORM_DB_PASSWORD}
+      POSTGRES_HOST: platform-db
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://platform-redis:6379/0
+      CELERY_BROKER_URL: redis://platform-redis:6379/1
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    networks:
+      - platform-internal
+
+  # ===========================================
+  # UMAMI ANALYTICS
+  # ===========================================
+  umami-db:
+    image: postgres:16-alpine
+    container_name: umami-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+    volumes:
+      - umami-db-data:/var/lib/postgresql/data
+    networks:
+      - umami-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    restart: unless-stopped
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_APP_SECRET}
+      DISABLE_TELEMETRY: 1
+    networks:
+      - web
+      - umami-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.umami.rule=Host(`analytics.richardnixon.dev`)"
+      - "traefik.http.routers.umami.entrypoints=websecure"
+      - "traefik.http.routers.umami.tls.certresolver=letsencrypt"
+      - "traefik.http.services.umami.loadbalancer.server.port=3000"
+
+  # ===========================================
+  # OBSERVABILITY STACK (Grafana + Prometheus + Loki)
+  # ===========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - monitoring
+    depends_on:
+      - cadvisor
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: https://status.richardnixon.dev
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - web
+      - monitoring
+    depends_on:
+      - prometheus
+      - loki
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`status.richardnixon.dev`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  # ===========================================
+  # PORTAINER - Docker Management
+  # ===========================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.richardnixon.dev`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+  # ===========================================
+  # VALHEIM SERVER
+  # ===========================================
+  valheim:
+    image: lloesche/valheim-server
+    container_name: valheim
+    restart: unless-stopped
+    cap_add:
+      - sys_nice
+    environment:
+      SERVER_NAME: "Emerald Realms"
+      WORLD_NAME: "MyWorld"
+      SERVER_PASS: ${VALHEIM_PASSWORD}
+      SERVER_PUBLIC: "true"
+      BACKUPS: "true"
+      BACKUPS_INTERVAL: "43200"
+      BACKUPS_MAX_AGE: "7"
+    volumes:
+      - valheim-config:/config
+      - valheim-data:/opt/valheim
+    ports:
+      - "2456-2458:2456-2458/udp"
+    networks:
+      - valheim-net
+
+networks:
+  web:
+    driver: bridge
+  wordpress-internal:
+    driver: bridge
+  platform-internal:
+    driver: bridge
+  umami-internal:
+    driver: bridge
+  monitoring:
+    driver: bridge
+  valheim-net:
+    driver: bridge
+
+volumes:
+  traefik-certificates:
+  wordpress-db-data:
+  wordpress-data:
+  platform-db-data:
+  platform-redis-data:
+  platform-static:
+  platform-media:
+  umami-db-data:
+  prometheus-data:
+  loki-data:
+  grafana-data:
+  portainer-data:
+  valheim-config:
+  valheim-data:

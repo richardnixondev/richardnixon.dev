@@ -1,0 +1,67 @@
+http:
+  routers:
+    platform:
+      rule: "Host(`richardnixon.dev`) || Host(`www.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: platform
+      tls:
+        certResolver: letsencrypt
+
+    wordpress:
+      rule: "Host(`richardemanu.com`) || Host(`www.richardemanu.com`)"
+      entryPoints:
+        - websecure
+      service: wordpress
+      tls:
+        certResolver: letsencrypt
+
+    umami:
+      rule: "Host(`analytics.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: umami
+      tls:
+        certResolver: letsencrypt
+
+    portainer:
+      rule: "Host(`portainer.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: portainer
+      tls:
+        certResolver: letsencrypt
+
+    grafana:
+      rule: "Host(`status.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: grafana
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    platform:
+      loadBalancer:
+        servers:
+          - url: "http://platform-web:8000"
+
+    wordpress:
+      loadBalancer:
+        servers:
+          - url: "http://wordpress:80"
+
+    umami:
+      loadBalancer:
+        servers:
+          - url: "http://umami:3000"
+
+    portainer:
+      loadBalancer:
+        servers:
+          - url: "http://portainer:9000"
+
+    grafana:
+      loadBalancer:
+        servers:
+          - url: "http://grafana:3000"
