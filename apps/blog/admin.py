@@ -1,10 +1,24 @@
 from django.contrib import admin
 from django.utils import timezone
+from django import forms
+from django_ckeditor_5.widgets import CKEditor5Widget
+from modeltranslation.admin import TranslationAdmin
 from .models import Tag, BlogPost, PostView
 
 
+class BlogPostAdminForm(forms.ModelForm):
+    class Meta:
+        model = BlogPost
+        fields = '__all__'
+        widgets = {
+            'content_pt_br': CKEditor5Widget(config_name='extends'),
+            'content_en': CKEditor5Widget(config_name='extends'),
+            'content': CKEditor5Widget(config_name='extends'),
+        }
+
+
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+class TagAdmin(TranslationAdmin):
     list_display = ('name', 'slug', 'post_count')
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
@@ -15,7 +29,8 @@ class TagAdmin(admin.ModelAdmin):
 
 
 @admin.register(BlogPost)
-class BlogPostAdmin(admin.ModelAdmin):
+class BlogPostAdmin(TranslationAdmin):
+    form = BlogPostAdminForm
     list_display = ('title', 'status', 'is_private', 'author', 'published_at', 'view_count')
     list_filter = ('status', 'is_private', 'tags', 'created_at')
     search_fields = ('title', 'content')

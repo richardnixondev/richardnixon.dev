@@ -1,21 +1,22 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Blog - richardnixon.dev{% endblock %}
+{% block title %}{% trans "Blog" %} - richardnixon.dev{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="flex flex-col md:flex-row gap-8">
         <!-- Main Content -->
         <div class="flex-grow">
-            <h1 class="text-3xl font-bold text-white mb-8">Blog</h1>
+            <h1 class="text-3xl font-bold text-white mb-8">{% trans "Blog" %}</h1>
 
             <!-- Search -->
             <form method="get" class="mb-8">
                 <div class="flex gap-2">
-                    <input type="text" name="search" value="{{ search }}" placeholder="Search posts..."
+                    <input type="text" name="search" value="{{ search }}" placeholder="{% trans "Search posts..." %}"
                            class="flex-grow px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition">
-                        Search
+                        {% trans "Search" %}
                     </button>
                 </div>
             </form>
@@ -40,7 +41,7 @@
                         <p class="text-gray-400 mb-4">{{ post.excerpt }}</p>
                         <div class="flex justify-between items-center text-sm text-gray-500">
                             <span>{{ post.published_at|date:"M d, Y" }}</span>
-                            <span>{{ post.reading_time }} min read</span>
+                            <span>{{ post.reading_time }} {% trans "min read" %}</span>
                         </div>
                     </div>
                 </article>
@@ -55,7 +56,7 @@
                     <li>
                         <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if active_tag %}&tag={{ active_tag }}{% endif %}"
                            class="px-4 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition">
-                            &laquo; Previous
+                            &laquo; {% trans "Previous" %}
                         </a>
                     </li>
                     {% endif %}
@@ -77,7 +78,7 @@
                     <li>
                         <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if active_tag %}&tag={{ active_tag }}{% endif %}"
                            class="px-4 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition">
-                            Next &raquo;
+                            {% trans "Next" %} &raquo;
                         </a>
                     </li>
                     {% endif %}
@@ -86,14 +87,14 @@
             {% endif %}
 
             {% else %}
-            <p class="text-gray-400 text-center py-8">No posts found.</p>
+            <p class="text-gray-400 text-center py-8">{% trans "No posts found." %}</p>
             {% endif %}
         </div>
 
         <!-- Sidebar -->
         <aside class="w-full md:w-72 flex-shrink-0">
             <div class="bg-gray-800 rounded-lg p-6 sticky top-24">
-                <h3 class="text-lg font-semibold text-white mb-4">Tags</h3>
+                <h3 class="text-lg font-semibold text-white mb-4">{% trans "Tags" %}</h3>
                 <div class="flex flex-wrap gap-2">
                     {% for tag in tags %}
                     <a href="?tag={{ tag.slug }}"
@@ -102,25 +103,25 @@
                         {{ tag.name }}
                     </a>
                     {% empty %}
-                    <p class="text-gray-500 text-sm">No tags yet.</p>
+                    <p class="text-gray-500 text-sm">{% trans "No tags yet." %}</p>
                     {% endfor %}
                 </div>
 
                 {% if active_tag %}
                 <a href="{% url 'blog:post_list' %}" class="block mt-4 text-primary-400 hover:text-primary-300 text-sm transition">
-                    Clear filter &times;
+                    {% trans "Clear filter" %} &times;
                 </a>
                 {% endif %}
 
                 <hr class="my-6 border-gray-700">
 
-                <h3 class="text-lg font-semibold text-white mb-4">Subscribe</h3>
+                <h3 class="text-lg font-semibold text-white mb-4">{% trans "Subscribe" %}</h3>
                 <a href="{% url 'blog:feed' %}" class="flex items-center text-gray-400 hover:text-primary-400 transition">
                     <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M5 3a1 1 0 000 2c5.523 0 10 4.477 10 10a1 1 0 102 0C17 8.373 11.627 3 5 3z"/>
                         <path d="M4 9a1 1 0 011-1 7 7 0 017 7 1 1 0 11-2 0 5 5 0 00-5-5 1 1 0 01-1-1zM3 15a2 2 0 114 0 2 2 0 01-4 0z"/>
                     </svg>
-                    RSS Feed
+                    {% trans "RSS Feed" %}
                 </a>
             </div>
         </aside>

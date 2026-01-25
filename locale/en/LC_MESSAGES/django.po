@@ -1,0 +1,332 @@
+# English translations for richardnixon.dev
+# Copyright (C) 2024
+# This file is distributed under the same license as the richardnixon.dev package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: richardnixon.dev 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# All English strings - msgstr empty means use msgid as-is
+# These are included for completeness
+
+msgid "Blog"
+msgstr ""
+
+msgid "Portfolio"
+msgstr ""
+
+msgid "Dashboards"
+msgstr ""
+
+msgid "Contact"
+msgstr ""
+
+msgid "Admin"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "Logout"
+msgstr ""
+
+msgid "Personal platform - Blog, Portfolio, and Dashboards"
+msgstr ""
+
+msgid "developer, software engineer, blog, portfolio"
+msgstr ""
+
+msgid "Personal platform"
+msgstr ""
+
+msgid "Personal platform for sharing thoughts, projects, and data."
+msgstr ""
+
+msgid "Links"
+msgstr ""
+
+msgid "RSS Feed"
+msgstr ""
+
+msgid "Download Resume"
+msgstr ""
+
+msgid "Connect"
+msgstr ""
+
+msgid "Contact Form"
+msgstr ""
+
+msgid "All rights reserved."
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Hi, I'm"
+msgstr ""
+
+msgid "Software Engineer passionate about building elegant solutions. Welcome to my corner of the internet."
+msgstr ""
+
+msgid "Read Blog"
+msgstr ""
+
+msgid "View Projects"
+msgstr ""
+
+msgid "Recent Posts"
+msgstr ""
+
+msgid "View all"
+msgstr ""
+
+msgid "min read"
+msgstr ""
+
+msgid "No posts yet. Check back soon!"
+msgstr ""
+
+msgid "Check out my projects and the technologies I work with."
+msgstr ""
+
+msgid "Interactive data visualizations and public datasets."
+msgstr ""
+
+msgid "Get in touch for collaborations or just to say hi."
+msgstr ""
+
+msgid "Search posts..."
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "No posts found."
+msgstr ""
+
+msgid "Tags"
+msgstr ""
+
+msgid "No tags yet."
+msgstr ""
+
+msgid "Clear filter"
+msgstr ""
+
+msgid "Subscribe"
+msgstr ""
+
+msgid "By"
+msgstr ""
+
+msgid "Back to Blog"
+msgstr ""
+
+msgid "Share on Twitter"
+msgstr ""
+
+msgid "Share on LinkedIn"
+msgstr ""
+
+msgid "Related Posts"
+msgstr ""
+
+msgid "All Posts"
+msgstr ""
+
+msgid "Posts tagged:"
+msgstr ""
+
+msgid "No posts found with this tag."
+msgstr ""
+
+msgid "A collection of projects I've worked on, from personal experiments to production applications."
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "Featured Projects"
+msgstr ""
+
+msgid "All Projects"
+msgstr ""
+
+msgid "Live Demo"
+msgstr ""
+
+msgid "No projects found."
+msgstr ""
+
+msgid "Back to Portfolio"
+msgstr ""
+
+msgid "View Code"
+msgstr ""
+
+msgid "Documentation"
+msgstr ""
+
+msgid "Gallery"
+msgstr ""
+
+msgid "Project Details"
+msgstr ""
+
+msgid "Started"
+msgstr ""
+
+msgid "Completed"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Ongoing"
+msgstr ""
+
+msgid "Related Projects"
+msgstr ""
+
+msgid "Get in Touch"
+msgstr ""
+
+msgid "Have a question, project idea, or just want to say hi? Fill out the form below and I'll get back to you as soon as possible."
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Subject"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Send Message"
+msgstr ""
+
+msgid "Resume"
+msgstr ""
+
+msgid "Download my current resume to learn more about my experience and skills."
+msgstr ""
+
+msgid "Download PDF"
+msgstr ""
+
+msgid "Find Me Online"
+msgstr ""
+
+msgid "Interactive data visualizations and public datasets. Explore, analyze, and suggest improvements."
+msgstr ""
+
+msgid "Featured"
+msgstr ""
+
+msgid "View"
+msgstr ""
+
+msgid "All Dashboards"
+msgstr ""
+
+msgid "Private"
+msgstr ""
+
+msgid "Members"
+msgstr ""
+
+msgid "Updated"
+msgstr ""
+
+msgid "ago"
+msgstr ""
+
+msgid "No dashboards available yet."
+msgstr ""
+
+msgid "Suggest Change"
+msgstr ""
+
+msgid "Edit Dashboard"
+msgstr ""
+
+msgid "No widgets added to this dashboard yet."
+msgstr ""
+
+msgid "Last updated:"
+msgstr ""
+
+msgid "Suggest a Change"
+msgstr ""
+
+msgid "Back to"
+msgstr ""
+
+msgid "Help improve this dashboard by suggesting data updates, new widgets, or reporting issues."
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Data Update"
+msgstr ""
+
+msgid "New Widget"
+msgstr ""
+
+msgid "Bug Report"
+msgstr ""
+
+msgid "Feature Request"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Brief summary of your suggestion"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Provide details about your suggestion..."
+msgstr ""
+
+msgid "Additional Data (JSON, optional)"
+msgstr ""
+
+msgid "If you have specific data to suggest, provide it as JSON."
+msgstr ""
+
+msgid "Submit Suggestion"
+msgstr ""
+
+msgid "Português (Brasil)"
+msgstr ""
+
+msgid "English"
+msgstr ""

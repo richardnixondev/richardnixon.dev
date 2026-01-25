@@ -1,0 +1,337 @@
+# Portuguese (Brazil) translations for richardnixon.dev
+# Copyright (C) 2024
+# This file is distributed under the same license as the richardnixon.dev package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: richardnixon.dev 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Portuguese (Brazil)\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# Navigation
+msgid "Blog"
+msgstr "Blog"
+
+msgid "Portfolio"
+msgstr "Portfólio"
+
+msgid "Dashboards"
+msgstr "Dashboards"
+
+msgid "Contact"
+msgstr "Contato"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Login"
+msgstr "Entrar"
+
+msgid "Logout"
+msgstr "Sair"
+
+# Base template
+msgid "Personal platform - Blog, Portfolio, and Dashboards"
+msgstr "Plataforma pessoal - Blog, Portfólio e Dashboards"
+
+msgid "developer, software engineer, blog, portfolio"
+msgstr "desenvolvedor, engenheiro de software, blog, portfólio"
+
+msgid "Personal platform"
+msgstr "Plataforma pessoal"
+
+msgid "Personal platform for sharing thoughts, projects, and data."
+msgstr "Plataforma pessoal para compartilhar pensamentos, projetos e dados."
+
+msgid "Links"
+msgstr "Links"
+
+msgid "RSS Feed"
+msgstr "Feed RSS"
+
+msgid "Download Resume"
+msgstr "Baixar Currículo"
+
+msgid "Connect"
+msgstr "Conecte-se"
+
+msgid "Contact Form"
+msgstr "Formulário de Contato"
+
+msgid "All rights reserved."
+msgstr "Todos os direitos reservados."
+
+# Home page
+msgid "Home"
+msgstr "Início"
+
+msgid "Hi, I'm"
+msgstr "Olá, eu sou"
+
+msgid "Software Engineer passionate about building elegant solutions. Welcome to my corner of the internet."
+msgstr "Engenheiro de Software apaixonado por criar soluções elegantes. Bem-vindo ao meu cantinho da internet."
+
+msgid "Read Blog"
+msgstr "Ler Blog"
+
+msgid "View Projects"
+msgstr "Ver Projetos"
+
+msgid "Recent Posts"
+msgstr "Posts Recentes"
+
+msgid "View all"
+msgstr "Ver todos"
+
+msgid "min read"
+msgstr "min de leitura"
+
+msgid "No posts yet. Check back soon!"
+msgstr "Nenhum post ainda. Volte em breve!"
+
+msgid "Check out my projects and the technologies I work with."
+msgstr "Confira meus projetos e as tecnologias com as quais trabalho."
+
+msgid "Interactive data visualizations and public datasets."
+msgstr "Visualizações de dados interativas e conjuntos de dados públicos."
+
+msgid "Get in touch for collaborations or just to say hi."
+msgstr "Entre em contato para colaborações ou apenas para dizer oi."
+
+# Blog
+msgid "Search posts..."
+msgstr "Buscar posts..."
+
+msgid "Search"
+msgstr "Buscar"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Next"
+msgstr "Próximo"
+
+msgid "No posts found."
+msgstr "Nenhum post encontrado."
+
+msgid "Tags"
+msgstr "Tags"
+
+msgid "No tags yet."
+msgstr "Nenhuma tag ainda."
+
+msgid "Clear filter"
+msgstr "Limpar filtro"
+
+msgid "Subscribe"
+msgstr "Assinar"
+
+msgid "By"
+msgstr "Por"
+
+msgid "Back to Blog"
+msgstr "Voltar ao Blog"
+
+msgid "Share on Twitter"
+msgstr "Compartilhar no Twitter"
+
+msgid "Share on LinkedIn"
+msgstr "Compartilhar no LinkedIn"
+
+msgid "Related Posts"
+msgstr "Posts Relacionados"
+
+msgid "All Posts"
+msgstr "Todos os Posts"
+
+msgid "Posts tagged:"
+msgstr "Posts com a tag:"
+
+msgid "No posts found with this tag."
+msgstr "Nenhum post encontrado com esta tag."
+
+# Portfolio
+msgid "A collection of projects I've worked on, from personal experiments to production applications."
+msgstr "Uma coleção de projetos em que trabalhei, de experimentos pessoais a aplicações em produção."
+
+msgid "All"
+msgstr "Todos"
+
+msgid "Featured Projects"
+msgstr "Projetos em Destaque"
+
+msgid "All Projects"
+msgstr "Todos os Projetos"
+
+msgid "Live Demo"
+msgstr "Demo ao Vivo"
+
+msgid "No projects found."
+msgstr "Nenhum projeto encontrado."
+
+msgid "Back to Portfolio"
+msgstr "Voltar ao Portfólio"
+
+msgid "View Code"
+msgstr "Ver Código"
+
+msgid "Documentation"
+msgstr "Documentação"
+
+msgid "Gallery"
+msgstr "Galeria"
+
+msgid "Project Details"
+msgstr "Detalhes do Projeto"
+
+msgid "Started"
+msgstr "Iniciado"
+
+msgid "Completed"
+msgstr "Concluído"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Ongoing"
+msgstr "Em andamento"
+
+msgid "Related Projects"
+msgstr "Projetos Relacionados"
+
+# Contact
+msgid "Get in Touch"
+msgstr "Entre em Contato"
+
+msgid "Have a question, project idea, or just want to say hi? Fill out the form below and I'll get back to you as soon as possible."
+msgstr "Tem alguma pergunta, ideia de projeto ou apenas quer dizer oi? Preencha o formulário abaixo e entrarei em contato o mais rápido possível."
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Subject"
+msgstr "Assunto"
+
+msgid "Message"
+msgstr "Mensagem"
+
+msgid "Send Message"
+msgstr "Enviar Mensagem"
+
+msgid "Resume"
+msgstr "Currículo"
+
+msgid "Download my current resume to learn more about my experience and skills."
+msgstr "Baixe meu currículo atual para saber mais sobre minha experiência e habilidades."
+
+msgid "Download PDF"
+msgstr "Baixar PDF"
+
+msgid "Find Me Online"
+msgstr "Me encontre online"
+
+# Dashboards
+msgid "Interactive data visualizations and public datasets. Explore, analyze, and suggest improvements."
+msgstr "Visualizações de dados interativas e conjuntos de dados públicos. Explore, analise e sugira melhorias."
+
+msgid "Featured"
+msgstr "Destaque"
+
+msgid "View"
+msgstr "Ver"
+
+msgid "All Dashboards"
+msgstr "Todos os Dashboards"
+
+msgid "Private"
+msgstr "Privado"
+
+msgid "Members"
+msgstr "Membros"
+
+msgid "Updated"
+msgstr "Atualizado"
+
+msgid "ago"
+msgstr "atrás"
+
+msgid "No dashboards available yet."
+msgstr "Nenhum dashboard disponível ainda."
+
+msgid "Suggest Change"
+msgstr "Sugerir Alteração"
+
+msgid "Edit Dashboard"
+msgstr "Editar Dashboard"
+
+msgid "No widgets added to this dashboard yet."
+msgstr "Nenhum widget adicionado a este dashboard ainda."
+
+msgid "Last updated:"
+msgstr "Última atualização:"
+
+msgid "Suggest a Change"
+msgstr "Sugerir uma Alteração"
+
+msgid "Back to"
+msgstr "Voltar para"
+
+msgid "Help improve this dashboard by suggesting data updates, new widgets, or reporting issues."
+msgstr "Ajude a melhorar este dashboard sugerindo atualizações de dados, novos widgets ou reportando problemas."
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Data Update"
+msgstr "Atualização de Dados"
+
+msgid "New Widget"
+msgstr "Novo Widget"
+
+msgid "Bug Report"
+msgstr "Relato de Bug"
+
+msgid "Feature Request"
+msgstr "Solicitação de Recurso"
+
+msgid "Other"
+msgstr "Outro"
+
+msgid "Title"
+msgstr "Título"
+
+msgid "Brief summary of your suggestion"
+msgstr "Breve resumo da sua sugestão"
+
+msgid "Description"
+msgstr "Descrição"
+
+msgid "Provide details about your suggestion..."
+msgstr "Forneça detalhes sobre sua sugestão..."
+
+msgid "Additional Data (JSON, optional)"
+msgstr "Dados Adicionais (JSON, opcional)"
+
+msgid "If you have specific data to suggest, provide it as JSON."
+msgstr "Se você tem dados específicos para sugerir, forneça como JSON."
+
+msgid "Submit Suggestion"
+msgstr "Enviar Sugestão"
+
+# Languages
+msgid "Português (Brasil)"
+msgstr "Português (Brasil)"
+
+msgid "English"
+msgstr "English"

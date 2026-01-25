@@ -1,9 +1,23 @@
 from django.contrib import admin
+from django import forms
+from django_ckeditor_5.widgets import CKEditor5Widget
+from modeltranslation.admin import TranslationAdmin
 from .models import Technology, Project, ProjectImage
 
 
+class ProjectAdminForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = '__all__'
+        widgets = {
+            'description_pt_br': CKEditor5Widget(config_name='default'),
+            'description_en': CKEditor5Widget(config_name='default'),
+            'description': CKEditor5Widget(config_name='default'),
+        }
+
+
 @admin.register(Technology)
-class TechnologyAdmin(admin.ModelAdmin):
+class TechnologyAdmin(TranslationAdmin):
     list_display = ('name', 'slug', 'icon', 'color', 'project_count')
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
@@ -19,7 +33,8 @@ class ProjectImageInline(admin.TabularInline):
 
 
 @admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
+class ProjectAdmin(TranslationAdmin):
+    form = ProjectAdminForm
     list_display = ('title', 'status', 'is_featured', 'order', 'start_date', 'end_date')
     list_filter = ('status', 'is_featured', 'technologies')
     search_fields = ('title', 'description', 'tagline')

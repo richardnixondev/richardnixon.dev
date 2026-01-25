@@ -34,7 +34,7 @@ class Project(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     tagline = models.CharField(max_length=200, help_text='Short one-line description')
-    description = models.TextField(help_text='Full project description (Markdown)')
+    description = models.TextField(help_text='HTML content')
     featured_image = models.ImageField(upload_to='portfolio/images/', blank=True, null=True)
     thumbnail = models.ImageField(upload_to='portfolio/thumbnails/', blank=True, null=True)
 

@@ -2,10 +2,7 @@ from django.db import models
 from django.urls import reverse
 from django.conf import settings
 from django.utils.text import slugify
-import markdown
-from markdown.extensions.codehilite import CodeHiliteExtension
-from markdown.extensions.fenced_code import FencedCodeExtension
-from markdown.extensions.toc import TocExtension
+from django.utils.html import strip_tags
 
 
 class Tag(models.Model):
@@ -39,7 +36,7 @@ class BlogPost(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     excerpt = models.TextField(blank=True, help_text='Short description for listings')
-    content = models.TextField(help_text='Markdown content')
+    content = models.TextField(help_text='HTML content')
     featured_image = models.ImageField(upload_to='blog/images/', blank=True, null=True)
 
     author = models.ForeignKey(
@@ -71,7 +68,9 @@ class BlogPost(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         if not self.excerpt and self.content:
-            self.excerpt = self.content[:200] + '...' if len(self.content) > 200 else self.content
+            # Strip HTML tags for excerpt
+            plain_text = strip_tags(self.content)
+            self.excerpt = plain_text[:200] + '...' if len(plain_text) > 200 else plain_text
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -79,20 +78,14 @@ class BlogPost(models.Model):
 
     @property
     def content_html(self):
-        """Convert markdown content to HTML with syntax highlighting."""
-        md = markdown.Markdown(extensions=[
-            'extra',
-            'meta',
-            CodeHiliteExtension(css_class='highlight', linenums=False),
-            FencedCodeExtension(),
-            TocExtension(permalink=True),
-        ])
-        return md.convert(self.content)
+        """Return HTML content from CKEditor."""
+        return self.content
 
     @property
     def reading_time(self):
         """Estimate reading time in minutes."""
-        word_count = len(self.content.split())
+        plain_text = strip_tags(self.content)
+        word_count = len(plain_text.split())
         return max(1, round(word_count / 200))
 
 

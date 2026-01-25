@@ -1,0 +1,24 @@
+{% extends 'two_factor/_base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Disable Two-Factor Authentication" %}{% endblock %}
+
+{% block content_inner %}
+<div class="space-y-6">
+    <div class="bg-red-900/30 border border-red-600 text-red-200 px-4 py-3 rounded-lg">
+        <p class="font-medium mb-2">{% trans "Warning" %}</p>
+        <p class="text-sm">{% trans "Disabling two-factor authentication will make your account less secure. Are you sure you want to continue?" %}</p>
+    </div>
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition">
+            {% trans "Yes, Disable Two-Factor Authentication" %}
+        </button>
+    </form>
+
+    <a href="{% url 'two_factor:profile' %}" class="block text-center text-gray-400 hover:text-gray-300 text-sm">
+        {% trans "Cancel" %}
+    </a>
+</div>
+{% endblock %}
