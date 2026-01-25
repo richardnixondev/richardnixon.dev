@@ -16,18 +16,18 @@ Personal portfolio and blog platform built with Django, deployed with Docker.
                                     │   + SSL/TLS     │
                                     └────────┬────────┘
                                              │
-              ┌──────────────────────────────┼──────────────────────────────┐
-              │                              │                              │
-     ┌────────▼────────┐           ┌────────▼────────┐           ┌────────▼────────┐
-     │  Django Platform │           │    WordPress    │           │     Umami       │
-     │ richardnixon.dev │           │ richardemanu.com│           │    Analytics    │
-     └────────┬────────┘           └─────────────────┘           └─────────────────┘
-              │
-    ┌─────────┼─────────┐
-    │         │         │
-┌───▼───┐ ┌───▼───┐ ┌───▼───┐
-│Postgres│ │ Redis │ │Celery │
-└───────┘ └───────┘ └───────┘
+     ┌───────────────┬───────────────┬───────┴───────┬───────────────┬───────────────┐
+     │               │               │               │               │               │
+┌────▼────┐   ┌──────▼──────┐  ┌─────▼─────┐  ┌──────▼──────┐  ┌─────▼─────┐  ┌──────▼──────┐
+│ Django  │   │  WordPress  │  │   Umami   │  │   Grafana   │  │ Portainer │  │  Valheim    │
+│Platform │   │richardemanu │  │ Analytics │  │  Dashboards │  │  Docker   │  │   Status    │
+└────┬────┘   └─────────────┘  └───────────┘  └──────┬──────┘  └───────────┘  └──────┬──────┘
+     │                                               │                               │
+┌────┴────┐                                    ┌─────┴─────┐                   ┌─────▼─────┐
+│Postgres │                                    │Prometheus │                   │  Valheim  │
+│ + Redis │                                    │  + Loki   │                   │  Server   │
+│+ Celery │                                    │           │                   │UDP:2456-58│
+└─────────┘                                    └───────────┘                   └───────────┘
 ```
 
 ## Services
@@ -39,6 +39,8 @@ Personal portfolio and blog platform built with Django, deployed with Docker.
 | Umami | analytics.richardnixon.dev | Privacy-focused analytics |
 | Grafana | status.richardnixon.dev | Observability dashboards |
 | Portainer | portainer.richardnixon.dev | Docker management |
+| Valheim Status | valheim.richardnixon.dev | Game server status page |
+| Valheim Server | valheim.richardnixon.dev:2456 | Valheim dedicated server |
 
 ## Technology Stack
 
@@ -49,15 +51,41 @@ Personal portfolio and blog platform built with Django, deployed with Docker.
 - **i18n**: English + Portuguese (django-modeltranslation)
 
 ### Infrastructure
-- **Reverse Proxy**: Traefik v3.3 with Let's Encrypt SSL
+- **Reverse Proxy**: Traefik v3 with Let's Encrypt SSL
 - **Containers**: Docker Compose
 - **Monitoring**: Prometheus, Grafana, Loki, Promtail, cAdvisor
+- **Exporters**: Node Exporter, PostgreSQL Exporter, Redis Exporter
 
 ### Security
-- **CrowdSec**: IPS with community threat intelligence
-- **Fail2ban**: SSH brute-force protection
-- **GeoIP Blocking**: SSH restricted to Ireland only
+- **CrowdSec**: IPS with community threat intelligence + Traefik bouncer
+- **Fail2ban**: SSH brute-force protection (3 attempts = 24h ban)
+- **GeoIP Blocking**: Country-based filtering for SSH
 - **reCAPTCHA v3**: Contact form spam protection
+
+## Grafana Dashboards
+
+| Dashboard | Description |
+|-----------|-------------|
+| VPS System | CPU, memory, disk, load average, uptime |
+| CrowdSec Security | Active bans, alerts, attack types |
+| Traefik Proxy | Requests/s, latency, status codes |
+| Database | PostgreSQL and Redis metrics |
+| Network & Firewall | Bandwidth, TCP connections, security events |
+| Container Logs | Real-time log viewer with search |
+| Valheim Server | Players online, server status, resource usage |
+
+## Prometheus Metrics
+
+| Job | Target | Metrics |
+|-----|--------|---------|
+| prometheus | localhost:9090 | Prometheus self-metrics |
+| cadvisor | cadvisor:8080 | Container metrics |
+| traefik | traefik:8080 | HTTP requests, latency |
+| node | node-exporter:9100 | VPS system metrics |
+| postgres | postgres-exporter:9187 | PostgreSQL stats |
+| redis | redis-exporter:9121 | Redis stats |
+| crowdsec | crowdsec:6060 | Security metrics |
+| valheim | valheim-metrics:3903 | Game server metrics |
 
 ## Project Structure
 
@@ -82,7 +110,7 @@ richardnixon.dev/
 ├── docker/
 │   ├── Dockerfile
 │   └── Dockerfile.full
-└── infrastructure/     # Docker Compose configs
+└── infrastructure/
     ├── docker-compose.yml
     ├── .env.example
     ├── traefik/
@@ -90,7 +118,11 @@ richardnixon.dev/
     ├── loki/
     ├── promtail/
     ├── grafana/
-    └── crowdsec/
+    │   └── provisioning/
+    │       ├── datasources/
+    │       └── dashboards/
+    ├── crowdsec/
+    └── valheim-status/
 ```
 
 ## Quick Start
@@ -128,6 +160,7 @@ docker compose exec platform-web python manage.py createsuperuser
 
 See `infrastructure/.env.example` for all required variables:
 
+### Django
 | Variable | Description |
 |----------|-------------|
 | `DJANGO_SECRET_KEY` | Django secret key |
@@ -135,8 +168,19 @@ See `infrastructure/.env.example` for all required variables:
 | `DJANGO_SUPERUSER_EMAIL` | Admin email (optional) |
 | `RECAPTCHA_PUBLIC_KEY` | reCAPTCHA v3 site key |
 | `RECAPTCHA_PRIVATE_KEY` | reCAPTCHA v3 secret key |
+
+### Monitoring
+| Variable | Description |
+|----------|-------------|
 | `GRAFANA_ADMIN_PASSWORD` | Grafana admin password |
 | `CROWDSEC_BOUNCER_KEY` | CrowdSec bouncer API key |
+
+### Valheim
+| Variable | Description |
+|----------|-------------|
+| `VALHEIM_PASSWORD` | Server password |
+| `ADMINLIST_IDS` | Comma-separated Steam IDs of admins |
+| `PERMITTEDLIST_IDS` | Comma-separated Steam IDs for whitelist |
 
 ## Security Configuration
 
@@ -149,11 +193,7 @@ Installed collections:
 - `crowdsecurity/whitelist-good-actors` - CDN/bot whitelist
 
 Country blocks (web traffic):
-- Russia (RU)
-- China (CN)
-- North Korea (KP)
-- Iran (IR)
-- Ukraine (UA)
+- Russia (RU), China (CN), North Korea (KP), Iran (IR), Ukraine (UA)
 
 Useful commands:
 ```bash
@@ -178,39 +218,67 @@ docker exec crowdsec cscli alerts list
 | GeoIP | Country-based filtering |
 | CrowdSec | SSH brute-force detection |
 
-### Firewall Rules
+## Valheim Server
 
-SSH access is restricted by GeoIP to Ireland only:
+### Configuration
+
+| Setting | Value |
+|---------|-------|
+| Server Name | Emerald Realms |
+| World Name | EmeraldRealms |
+| Ports | UDP 2456-2458 |
+| Backups | Every 12 hours, 7 days retention |
+| Status Page | valheim.richardnixon.dev |
+
+### Status Page Features
+
+- Server online/offline indicator
+- Players online count with connection duration
+- World name and game version
+- Server uptime
+- Copy-to-clipboard server address
+
+### Admin Commands (F5 console in-game)
+
+```
+kick [name/steamID]   - Kick player
+ban [name/steamID]    - Ban player
+unban [steamID]       - Unban player
+banned                - List banned players
+save                  - Force world save
+info                  - Server info
+```
+
+### Managing Admins
+
+Add Steam IDs to docker-compose.yml:
+```yaml
+ADMINLIST_IDS: "76561198012345678,76561198087654321"
+PERMITTEDLIST_IDS: "76561198012345678,76561198087654321"
+```
+
+Then restart the server:
 ```bash
-# View current rules
-iptables -L INPUT -n
-
-# Rules persist in /etc/iptables/rules.v4
+docker compose up -d valheim --force-recreate
 ```
 
 ## Monitoring
 
-### Grafana Dashboards
+### Grafana Access
 
-Access: https://status.richardnixon.dev
-
-Available dashboards:
-- **Docker Containers**: CPU, memory, network metrics
-- **Container Logs**: Real-time log viewer with search
-
-### Prometheus Metrics
-
-Metrics collected by cAdvisor:
-- Container CPU usage
-- Container memory usage
-- Network I/O
-- Disk I/O
+URL: https://status.richardnixon.dev
 
 ### Log Aggregation
 
 Loki + Promtail collect logs from:
 - All Docker containers
 - System logs (/var/log)
+
+Query logs in Grafana:
+```
+{container_name="platform-web"} |~ "error"
+{job="docker"} |= "blocked"
+```
 
 ## Common Commands
 
@@ -250,6 +318,21 @@ docker exec crowdsec cscli decisions list
 
 # View iptables rules
 iptables -L INPUT -n -v
+```
+
+### Valheim Management
+```bash
+# View server logs
+docker compose logs -f valheim
+
+# Restart server
+docker compose restart valheim
+
+# Backup world manually
+docker exec valheim backup
+
+# Check connected players
+docker logs valheim 2>&1 | grep "Got connection"
 ```
 
 ## URL Routes
