@@ -19,6 +19,7 @@ services:
       - platform-internal
       - wordpress-internal
       - crowdsec
+      - monitoring
 
   # ===========================================
   # WORDPRESS - richardemanu.com
@@ -288,6 +289,48 @@ services:
     networks:
       - monitoring
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${PLATFORM_DB_USER:-platform}:${PLATFORM_DB_PASSWORD}@platform-db:5432/${PLATFORM_DB_NAME:-platform}?sslmode=disable"
+    networks:
+      - monitoring
+      - platform-internal
+    depends_on:
+      platform-db:
+        condition: service_healthy
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: "redis://platform-redis:6379"
+    networks:
+      - monitoring
+      - platform-internal
+    depends_on:
+      platform-redis:
+        condition: service_healthy
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -332,6 +375,7 @@ services:
       - traefik-logs:/logs/traefik:ro
     networks:
       - crowdsec
+      - monitoring
 
   crowdsec-bouncer:
     image: fbonalair/traefik-crowdsec-bouncer:latest
