@@ -5,6 +5,19 @@ http:
         address: http://crowdsec-bouncer:8080/api/v1/forwardAuth
         trustForwardHeader: true
 
+    # CORS headers for Umami Analytics (allows external sites to send data)
+    umami-cors:
+      headers:
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "Content-Type"
+        accessControlAllowOriginList:
+          - "*"
+        accessControlMaxAge: 86400
+
     # Block sensitive WordPress files - replace with non-existent path
     wp-block-sensitive:
       replacePathRegex:
@@ -50,6 +63,7 @@ http:
         - websecure
       service: umami
       middlewares:
+        - umami-cors
         - crowdsec-bouncer
       tls:
         certResolver: letsencrypt
