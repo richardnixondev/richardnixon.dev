@@ -16,18 +16,18 @@ Personal portfolio and blog platform built with Django, deployed with Docker.
                                     │   + SSL/TLS     │
                                     └────────┬────────┘
                                              │
-     ┌───────────────┬───────────────┬───────┴───────┬───────────────┬───────────────┐
-     │               │               │               │               │               │
-┌────▼────┐   ┌──────▼──────┐  ┌─────▼─────┐  ┌──────▼──────┐  ┌─────▼─────┐  ┌──────▼──────┐
-│ Django  │   │  WordPress  │  │   Umami   │  │   Grafana   │  │ Portainer │  │  Valheim    │
-│Platform │   │richardemanu │  │ Analytics │  │  Dashboards │  │  Docker   │  │   Status    │
-└────┬────┘   └─────────────┘  └───────────┘  └──────┬──────┘  └───────────┘  └──────┬──────┘
-     │                                               │                               │
-┌────┴────┐                                    ┌─────┴─────┐                   ┌─────▼─────┐
-│Postgres │                                    │Prometheus │                   │  Valheim  │
-│ + Redis │                                    │  + Loki   │                   │  Server   │
-│+ Celery │                                    │           │                   │UDP:2456-58│
-└─────────┘                                    └───────────┘                   └───────────┘
+     ┌──────────┬──────────┬────────┬────────┴────────┬──────────┬──────────┬──────────┐
+     │          │          │        │                  │          │          │          │
+┌────▼───┐ ┌───▼───┐ ┌────▼───┐ ┌──▼──┐ ┌────────┐ ┌─▼──┐ ┌────▼───┐ ┌────▼───┐ ┌───▼────┐
+│ Django │ │  WP   │ │LocFlow│ │Eire │ │ Umami  │ │Graf│ │Portain│ │Valheim │ │CrowdSec│
+│Platform│ │       │ │  API  │ │Scope│ │Analytics│ │ana │ │  er   │ │ Status │ │  IPS   │
+└───┬────┘ └───────┘ └───┬───┘ └─────┘ └────────┘ └─┬──┘ └───────┘ └───┬────┘ └────────┘
+    │                    │                           │                   │
+┌───┴────┐          ┌────┴───┐                 ┌─────┴─────┐      ┌─────▼─────┐
+│Postgres│          │Postgres│                 │Prometheus │      │  Valheim  │
+│+ Redis │          │        │                 │  + Loki   │      │  Server   │
+│+ Celery│          │        │                 │           │      │UDP:2456-58│
+└────────┘          └────────┘                 └───────────┘      └───────────┘
 ```
 
 ## Services
@@ -36,6 +36,8 @@ Personal portfolio and blog platform built with Django, deployed with Docker.
 |---------|--------|-------------|
 | Django Platform | richardnixon.dev | Blog, portfolio, contact |
 | WordPress | richardemanu.com | Personal site |
+| LocFlow | locflow.richardnixon.dev | Localization automation platform (REST API) |
+| EireScope | eirescope.richardnixon.dev | OSINT dashboard |
 | Umami | analytics.richardnixon.dev | Privacy-focused analytics |
 | Grafana | status.richardnixon.dev | Observability dashboards |
 | Portainer | portainer.richardnixon.dev | Docker management |
@@ -175,6 +177,19 @@ See `infrastructure/.env.example` for all required variables:
 | `GRAFANA_ADMIN_PASSWORD` | Grafana admin password |
 | `CROWDSEC_BOUNCER_KEY` | CrowdSec bouncer API key |
 
+### LocFlow
+| Variable | Description |
+|----------|-------------|
+| `LOCFLOW_DB_PASSWORD` | LocFlow PostgreSQL password |
+| `LOCFLOW_SECRET_KEY` | LocFlow Django secret key |
+| `LOCFLOW_UMAMI_WEBSITE_ID` | Umami website ID for tracking |
+
+### EireScope
+| Variable | Description |
+|----------|-------------|
+| `EIRESCOPE_SECRET_KEY` | EireScope secret key |
+| `EIRESCOPE_UMAMI_WEBSITE_ID` | Umami website ID for tracking |
+
 ### Valheim
 | Variable | Description |
 |----------|-------------|
@@ -293,19 +308,35 @@ docker compose ps
 # View logs
 docker compose logs -f platform-web
 docker compose logs -f platform-celery
+docker compose logs -f locflow-web
 
 # Rebuild after code changes
 docker compose build platform-web platform-celery platform-celery-beat
 docker compose up -d platform-web platform-celery platform-celery-beat
+
+# Rebuild LocFlow
+docker compose build locflow-web
+docker compose up -d locflow-web
+
+# Rebuild EireScope
+docker compose build eirescope
+docker compose up -d eirescope
 ```
 
-### Django Management
+### Django Management (Platform)
 ```bash
 docker compose exec platform-web python manage.py migrate
 docker compose exec platform-web python manage.py makemigrations
 docker compose exec platform-web python manage.py createsuperuser
 docker compose exec platform-web python manage.py collectstatic
 docker compose exec platform-web python manage.py shell
+```
+
+### Django Management (LocFlow)
+```bash
+docker compose exec locflow-web python manage.py migrate
+docker compose exec locflow-web python manage.py createsuperuser
+docker compose exec locflow-web python manage.py shell
 ```
 
 ### Security Management
