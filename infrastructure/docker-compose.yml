@@ -21,6 +21,7 @@ services:
       - web
       - platform-internal
       - wordpress-internal
+      - locflow-internal
       - crowdsec
       - monitoring
       - valheim-net
@@ -498,6 +499,60 @@ services:
       - "traefik.http.routers.eirescope.tls.certresolver=letsencrypt"
       - "traefik.http.services.eirescope.loadbalancer.server.port=5000"
 
+  # ===========================================
+  # LOCFLOW - Localization Platform (locflow.richardnixon.dev)
+  # ===========================================
+  locflow-db:
+    image: postgres:16-alpine
+    container_name: locflow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${LOCFLOW_DB_NAME:-locflow}
+      POSTGRES_USER: ${LOCFLOW_DB_USER:-locflow}
+      POSTGRES_PASSWORD: ${LOCFLOW_DB_PASSWORD}
+    volumes:
+      - locflow-db-data:/var/lib/postgresql/data
+    networks:
+      - locflow-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LOCFLOW_DB_USER:-locflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  locflow-web:
+    build:
+      context: /root/LocFlow
+      dockerfile: docker/Dockerfile.prod
+    container_name: locflow-web
+    restart: unless-stopped
+    depends_on:
+      locflow-db:
+        condition: service_healthy
+    environment:
+      DEBUG: "0"
+      SECRET_KEY: ${LOCFLOW_SECRET_KEY}
+      POSTGRES_DB: ${LOCFLOW_DB_NAME:-locflow}
+      POSTGRES_USER: ${LOCFLOW_DB_USER:-locflow}
+      POSTGRES_PASSWORD: ${LOCFLOW_DB_PASSWORD}
+      POSTGRES_HOST: locflow-db
+      POSTGRES_PORT: 5432
+      ALLOWED_HOSTS: locflow.richardnixon.dev
+      UMAMI_WEBSITE_ID: ${LOCFLOW_UMAMI_WEBSITE_ID:-}
+      DJANGO_SUPERUSER_EMAIL: ${LOCFLOW_SUPERUSER_EMAIL:-}
+      DJANGO_SUPERUSER_PASSWORD: ${LOCFLOW_SUPERUSER_PASSWORD:-}
+    volumes:
+      - locflow-static:/app/staticfiles
+    networks:
+      - web
+      - locflow-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.locflow.rule=Host(`locflow.richardnixon.dev`)"
+      - "traefik.http.routers.locflow.entrypoints=websecure"
+      - "traefik.http.routers.locflow.tls.certresolver=letsencrypt"
+      - "traefik.http.services.locflow.loadbalancer.server.port=8000"
+
 networks:
   web:
     driver: bridge
@@ -506,6 +561,8 @@ networks:
   platform-internal:
     driver: bridge
   umami-internal:
+    driver: bridge
+  locflow-internal:
     driver: bridge
   monitoring:
     driver: bridge
@@ -524,6 +581,8 @@ volumes:
   platform-static:
   platform-media:
   umami-db-data:
+  locflow-db-data:
+  locflow-static:
   prometheus-data:
   loki-data:
   grafana-data:

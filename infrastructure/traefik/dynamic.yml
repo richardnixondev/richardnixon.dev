@@ -108,6 +108,16 @@ http:
       tls:
         certResolver: letsencrypt
 
+    locflow:
+      rule: "Host(`locflow.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: locflow
+      middlewares:
+        - crowdsec-bouncer
+      tls:
+        certResolver: letsencrypt
+
   services:
     platform:
       loadBalancer:
@@ -143,3 +153,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://eirescope:5000"
+
+    locflow:
+      loadBalancer:
+        servers:
+          - url: "http://locflow-web:8000"
