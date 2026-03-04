@@ -476,6 +476,28 @@ services:
     networks:
       - monitoring
 
+  # ===========================================
+  # EIRESCOPE - OSINT Dashboard (eirescope.richardnixon.dev)
+  # ===========================================
+  eirescope:
+    build:
+      context: /root/eirescope
+      dockerfile: Dockerfile
+    container_name: eirescope
+    restart: unless-stopped
+    environment:
+      EIRESCOPE_DEBUG: "false"
+      EIRESCOPE_SECRET_KEY: ${EIRESCOPE_SECRET_KEY:-eirescope-prod-key}
+      EIRESCOPE_UMAMI_WEBSITE_ID: ${EIRESCOPE_UMAMI_WEBSITE_ID:-}
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.eirescope.rule=Host(`eirescope.richardnixon.dev`)"
+      - "traefik.http.routers.eirescope.entrypoints=websecure"
+      - "traefik.http.routers.eirescope.tls.certresolver=letsencrypt"
+      - "traefik.http.services.eirescope.loadbalancer.server.port=5000"
+
 networks:
   web:
     driver: bridge

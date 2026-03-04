@@ -98,6 +98,16 @@ http:
       tls:
         certResolver: letsencrypt
 
+    eirescope:
+      rule: "Host(`eirescope.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: eirescope
+      middlewares:
+        - crowdsec-bouncer
+      tls:
+        certResolver: letsencrypt
+
   services:
     platform:
       loadBalancer:
@@ -128,3 +138,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://valheim-status:80"
+
+    eirescope:
+      loadBalancer:
+        servers:
+          - url: "http://eirescope:5000"
