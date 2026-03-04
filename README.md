@@ -4,30 +4,26 @@ Personal portfolio and blog platform built with Django, deployed with Docker.
 
 ## Architecture
 
-```
-                                    ┌─────────────────┐
-                                    │   Cloudflare    │
-                                    │      DNS        │
-                                    └────────┬────────┘
-                                             │
-                                    ┌────────▼────────┐
-                                    │    Traefik      │
-                                    │  (Reverse Proxy)│
-                                    │   + SSL/TLS     │
-                                    └────────┬────────┘
-                                             │
-     ┌──────────┬──────────┬────────┬────────┴────────┬──────────┬──────────┬──────────┐
-     │          │          │        │                  │          │          │          │
-┌────▼───┐ ┌───▼───┐ ┌────▼───┐ ┌──▼──┐ ┌────────┐ ┌─▼──┐ ┌────▼───┐ ┌────▼───┐ ┌───▼────┐
-│ Django │ │  WP   │ │LocFlow│ │Eire │ │ Umami  │ │Graf│ │Portain│ │Valheim │ │CrowdSec│
-│Platform│ │       │ │  API  │ │Scope│ │Analytics│ │ana │ │  er   │ │ Status │ │  IPS   │
-└───┬────┘ └───────┘ └───┬───┘ └─────┘ └────────┘ └─┬──┘ └───────┘ └───┬────┘ └────────┘
-    │                    │                           │                   │
-┌───┴────┐          ┌────┴───┐                 ┌─────┴─────┐      ┌─────▼─────┐
-│Postgres│          │Postgres│                 │Prometheus │      │  Valheim  │
-│+ Redis │          │        │                 │  + Loki   │      │  Server   │
-│+ Celery│          │        │                 │           │      │UDP:2456-58│
-└────────┘          └────────┘                 └───────────┘      └───────────┘
+```mermaid
+graph TD
+    DNS[Cloudflare DNS] --> Traefik[Traefik + SSL/TLS]
+    Traefik --> CrowdSec[CrowdSec IPS]
+
+    Traefik --> Platform[Django Platform<br>richardnixon.dev]
+    Traefik --> WP[WordPress<br>richardemanu.com]
+    Traefik --> LocFlow[LocFlow API<br>locflow.richardnixon.dev]
+    Traefik --> EireScope[EireScope<br>eirescope.richardnixon.dev]
+    Traefik --> Umami[Umami Analytics<br>analytics.richardnixon.dev]
+    Traefik --> Grafana[Grafana<br>status.richardnixon.dev]
+    Traefik --> Portainer[Portainer<br>portainer.richardnixon.dev]
+    Traefik --> VStatus[Valheim Status<br>valheim.richardnixon.dev]
+
+    Platform --> PlatformDB[(PostgreSQL + Redis<br>+ Celery)]
+    LocFlow --> LocFlowDB[(PostgreSQL)]
+    Umami --> UmamiDB[(PostgreSQL)]
+    WP --> WPDB[(MariaDB)]
+    Grafana --> Prometheus[Prometheus + Loki]
+    VStatus --> Valheim[Valheim Server<br>UDP:2456-2458]
 ```
 
 ## Services
