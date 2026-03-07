@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     # reCAPTCHA
     'django_recaptcha',
 
+    # CORS
+    'corsheaders',
+
     # Local apps
     'apps.accounts',
     'apps.blog',
@@ -52,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -322,6 +326,10 @@ CKEDITOR_5_CONFIGS = {
         },
     },
 }
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+CORS_ALLOW_CREDENTIALS = True
 
 # reCAPTCHA v3 settings
 RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '')

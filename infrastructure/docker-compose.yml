@@ -25,6 +25,7 @@ services:
       - crowdsec
       - monitoring
       - valheim-net
+      - authentik-internal
 
   # ===========================================
   # WORDPRESS - richardemanu.com
@@ -128,6 +129,7 @@ services:
       RECAPTCHA_PUBLIC_KEY: ${RECAPTCHA_PUBLIC_KEY:-}
       RECAPTCHA_PRIVATE_KEY: ${RECAPTCHA_PRIVATE_KEY:-}
       UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+      CORS_ALLOWED_ORIGINS: https://richardnixon.dev,https://www.richardnixon.dev
     volumes:
       - platform-static:/app/staticfiles
       - platform-media:/app/media
@@ -136,10 +138,20 @@ services:
       - platform-internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.platform.rule=Host(`richardnixon.dev`) || Host(`www.richardnixon.dev`)"
-      - "traefik.http.routers.platform.entrypoints=websecure"
-      - "traefik.http.routers.platform.tls.certresolver=letsencrypt"
-      - "traefik.http.services.platform.loadbalancer.server.port=8000"
+      - "traefik.http.services.platform-api.loadbalancer.server.port=8000"
+
+  platform-frontend:
+    build:
+      context: ../frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://richardnixon.dev/api
+        NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+    container_name: platform-frontend
+    restart: unless-stopped
+    depends_on:
+      - platform-web
+    networks:
+      - web
 
   platform-celery:
     build:
@@ -553,6 +565,93 @@ services:
       - "traefik.http.routers.locflow.tls.certresolver=letsencrypt"
       - "traefik.http.services.locflow.loadbalancer.server.port=8000"
 
+  # ===========================================
+  # AUTHENTIK - SSO/2FA Identity Provider
+  # ===========================================
+  authentik-db:
+    image: postgres:16-alpine
+    container_name: authentik-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: authentik
+      POSTGRES_USER: authentik
+      POSTGRES_PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+    volumes:
+      - authentik-db-data:/var/lib/postgresql/data
+    networks:
+      - authentik-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authentik"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  authentik-redis:
+    image: redis:7-alpine
+    container_name: authentik-redis
+    restart: unless-stopped
+    volumes:
+      - authentik-redis-data:/data
+    networks:
+      - authentik-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:2026.2
+    container_name: authentik-server
+    restart: unless-stopped
+    command: server
+    depends_on:
+      authentik-db:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
+      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL}
+    volumes:
+      - authentik-media:/media
+      - authentik-templates:/templates
+    networks:
+      - web
+      - authentik-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`auth.richardnixon.dev`)"
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.tls.certresolver=letsencrypt"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:2026.2
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    depends_on:
+      authentik-db:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+    networks:
+      - authentik-internal
+
 networks:
   web:
     driver: bridge
@@ -569,6 +668,8 @@ networks:
   crowdsec:
     driver: bridge
   valheim-net:
+    driver: bridge
+  authentik-internal:
     driver: bridge
 
 volumes:
@@ -592,3 +693,7 @@ volumes:
   valheim-logs:
   crowdsec-db:
   crowdsec-config:
+  authentik-db-data:
+  authentik-redis-data:
+  authentik-media:
+  authentik-templates:

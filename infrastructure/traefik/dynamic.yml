@@ -24,7 +24,42 @@ http:
         regex: ".*"
         replacement: "/this-page-does-not-exist-blocked-by-security"
 
+    # Tailscale VPN - allow only Tailscale IPs
+    tailscale-only:
+      ipAllowList:
+        sourceRange:
+          - "100.64.0.0/10"
+
+    # Authentik forward auth - SSO/2FA
+    authentik-auth:
+      forwardAuth:
+        address: "http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+          - X-authentik-email
+          - X-authentik-name
+          - X-authentik-uid
+
+    # Admin chain: SSO + CrowdSec (add tailscale-only when VPN is ready)
+    admin-chain:
+      chain:
+        middlewares:
+          - authentik-auth
+          - crowdsec-bouncer
+
   routers:
+    # Authentik outpost callback - must match all subdomains (priority 200)
+    authentik-outpost:
+      rule: "HostRegexp(`{host:.+\\.richardnixon\\.dev}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+      entryPoints:
+        - websecure
+      service: authentik
+      priority: 200
+      tls:
+        certResolver: letsencrypt
+
     # Block sensitive WordPress files
     wordpress-blocked:
       rule: "(Host(`richardemanu.com`) || Host(`www.richardemanu.com`)) && (Path(`/readme.html`) || Path(`/license.txt`) || Path(`/wp-config-sample.php`) || PathPrefix(`/wp-includes/`))"
@@ -37,11 +72,26 @@ http:
       tls:
         certResolver: letsencrypt
 
-    platform:
+    # === PUBLIC ROUTERS (crowdsec only) ===
+
+    # Django API + admin + media + feed + sitemap
+    platform-api:
+      rule: "(Host(`richardnixon.dev`) || Host(`www.richardnixon.dev`)) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/media`) || PathPrefix(`/feed`) || PathPrefix(`/sitemap.xml`) || PathPrefix(`/ckeditor5`) || PathPrefix(`/i18n`) || PathPrefix(`/en/`) || PathPrefix(`/pt-br/`) || PathPrefix(`/static`))"
+      entryPoints:
+        - websecure
+      service: platform-api
+      middlewares:
+        - crowdsec-bouncer
+      priority: 110
+      tls:
+        certResolver: letsencrypt
+
+    # Next.js frontend (everything else)
+    platform-frontend:
       rule: "Host(`richardnixon.dev`) || Host(`www.richardnixon.dev`)"
       entryPoints:
         - websecure
-      service: platform
+      service: platform-frontend
       middlewares:
         - crowdsec-bouncer
       tls:
@@ -57,37 +107,6 @@ http:
       tls:
         certResolver: letsencrypt
 
-    umami:
-      rule: "Host(`analytics.richardnixon.dev`)"
-      entryPoints:
-        - websecure
-      service: umami
-      middlewares:
-        - umami-cors
-        - crowdsec-bouncer
-      tls:
-        certResolver: letsencrypt
-
-    portainer:
-      rule: "Host(`portainer.richardnixon.dev`)"
-      entryPoints:
-        - websecure
-      service: portainer
-      middlewares:
-        - crowdsec-bouncer
-      tls:
-        certResolver: letsencrypt
-
-    grafana:
-      rule: "Host(`status.richardnixon.dev`)"
-      entryPoints:
-        - websecure
-      service: grafana
-      middlewares:
-        - crowdsec-bouncer
-      tls:
-        certResolver: letsencrypt
-
     valheim-status:
       rule: "Host(`valheim.richardnixon.dev`)"
       entryPoints:
@@ -95,6 +114,19 @@ http:
       service: valheim-status
       middlewares:
         - crowdsec-bouncer
+      tls:
+        certResolver: letsencrypt
+
+    # Umami tracking endpoints - public (needed by external sites)
+    umami-tracking:
+      rule: "Host(`analytics.richardnixon.dev`) && (Path(`/api/send`) || Path(`/script.js`))"
+      entryPoints:
+        - websecure
+      service: umami
+      middlewares:
+        - umami-cors
+        - crowdsec-bouncer
+      priority: 110
       tls:
         certResolver: letsencrypt
 
@@ -118,11 +150,48 @@ http:
       tls:
         certResolver: letsencrypt
 
+    # === ADMIN ROUTERS (VPN + SSO + CrowdSec) ===
+
+    umami:
+      rule: "Host(`analytics.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: umami
+      middlewares:
+        - admin-chain
+      tls:
+        certResolver: letsencrypt
+
+    portainer:
+      rule: "Host(`portainer.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: portainer
+      middlewares:
+        - admin-chain
+      tls:
+        certResolver: letsencrypt
+
+    grafana:
+      rule: "Host(`status.richardnixon.dev`)"
+      entryPoints:
+        - websecure
+      service: grafana
+      middlewares:
+        - admin-chain
+      tls:
+        certResolver: letsencrypt
+
   services:
-    platform:
+    platform-api:
       loadBalancer:
         servers:
           - url: "http://platform-web:8000"
+
+    platform-frontend:
+      loadBalancer:
+        servers:
+          - url: "http://platform-frontend:3000"
 
     wordpress:
       loadBalancer:
@@ -158,3 +227,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://locflow-web:8000"
+
+    authentik:
+      loadBalancer:
+        servers:
+          - url: "http://authentik-server:9000"
