@@ -3,7 +3,6 @@ Production settings for richardnixon.dev platform.
 """
 import os
 
-import sentry_sdk
 from .base import *
 
 DEBUG = False
@@ -11,6 +10,7 @@ DEBUG = False
 # Sentry error tracking
 SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
 if SENTRY_DSN:
+    import sentry_sdk
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         traces_sample_rate=0.1,
