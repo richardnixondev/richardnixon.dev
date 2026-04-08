@@ -129,6 +129,7 @@ services:
       RECAPTCHA_PUBLIC_KEY: ${RECAPTCHA_PUBLIC_KEY:-}
       RECAPTCHA_PRIVATE_KEY: ${RECAPTCHA_PRIVATE_KEY:-}
       UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       CORS_ALLOWED_ORIGINS: https://richardnixon.dev,https://www.richardnixon.dev
     volumes:
       - platform-static:/app/staticfiles
@@ -136,6 +137,12 @@ services:
     networks:
       - web
       - platform-internal
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.platform-api.loadbalancer.server.port=8000"
@@ -503,7 +510,7 @@ services:
     restart: unless-stopped
     environment:
       EIRESCOPE_DEBUG: "false"
-      EIRESCOPE_SECRET_KEY: ${EIRESCOPE_SECRET_KEY:-eirescope-prod-key}
+      EIRESCOPE_SECRET_KEY: ${EIRESCOPE_SECRET_KEY}
       EIRESCOPE_UMAMI_WEBSITE_ID: ${EIRESCOPE_UMAMI_WEBSITE_ID:-}
     networks:
       - web
@@ -562,6 +569,12 @@ services:
     networks:
       - web
       - locflow-internal
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "-H", "Host: locflow.richardnixon.dev", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.locflow-api.loadbalancer.server.port=8000"

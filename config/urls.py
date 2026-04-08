@@ -12,6 +12,7 @@ from two_factor.admin import AdminSiteOTPRequired
 
 from apps.api.api import api
 from apps.blog.sitemaps import BlogSitemap
+from apps.core.views import health
 from apps.portfolio.sitemaps import PortfolioSitemap
 
 # Patch admin to require OTP
@@ -24,6 +25,7 @@ sitemaps = {
 
 # URLs that don't need language prefix
 urlpatterns = [
+    path('health/', health, name='health'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('i18n/', include('django.conf.urls.i18n')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
