@@ -140,17 +140,30 @@ http:
       tls:
         certResolver: letsencrypt
 
+    # === ADMIN ROUTERS (VPN + SSO + CrowdSec) ===
+
+    # LocFlow API + admin + static (behind SSO)
+    locflow-api:
+      rule: "Host(`locflow.richardnixon.dev`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/static`))"
+      entryPoints:
+        - websecure
+      service: locflow-api
+      middlewares:
+        - admin-chain
+      priority: 110
+      tls:
+        certResolver: letsencrypt
+
+    # LocFlow frontend (behind SSO)
     locflow:
       rule: "Host(`locflow.richardnixon.dev`)"
       entryPoints:
         - websecure
-      service: locflow
+      service: locflow-frontend
       middlewares:
-        - crowdsec-bouncer
+        - admin-chain
       tls:
         certResolver: letsencrypt
-
-    # === ADMIN ROUTERS (VPN + SSO + CrowdSec) ===
 
     umami:
       rule: "Host(`analytics.richardnixon.dev`)"
@@ -223,10 +236,15 @@ http:
         servers:
           - url: "http://eirescope:5000"
 
-    locflow:
+    locflow-api:
       loadBalancer:
         servers:
           - url: "http://locflow-web:8000"
+
+    locflow-frontend:
+      loadBalancer:
+        servers:
+          - url: "http://locflow-frontend:3000"
 
     authentik:
       loadBalancer:

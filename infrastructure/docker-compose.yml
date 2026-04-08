@@ -150,8 +150,11 @@ services:
     restart: unless-stopped
     depends_on:
       - platform-web
+    environment:
+      API_URL: http://platform-web:8000/api
     networks:
       - web
+      - platform-internal
 
   platform-celery:
     build:
@@ -550,6 +553,7 @@ services:
       POSTGRES_HOST: locflow-db
       POSTGRES_PORT: 5432
       ALLOWED_HOSTS: locflow.richardnixon.dev
+      CORS_ALLOWED_ORIGINS: https://locflow.richardnixon.dev
       UMAMI_WEBSITE_ID: ${LOCFLOW_UMAMI_WEBSITE_ID:-}
       DJANGO_SUPERUSER_EMAIL: ${LOCFLOW_SUPERUSER_EMAIL:-}
       DJANGO_SUPERUSER_PASSWORD: ${LOCFLOW_SUPERUSER_PASSWORD:-}
@@ -560,10 +564,21 @@ services:
       - locflow-internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.locflow.rule=Host(`locflow.richardnixon.dev`)"
-      - "traefik.http.routers.locflow.entrypoints=websecure"
-      - "traefik.http.routers.locflow.tls.certresolver=letsencrypt"
-      - "traefik.http.services.locflow.loadbalancer.server.port=8000"
+      - "traefik.http.services.locflow-api.loadbalancer.server.port=8000"
+
+  locflow-frontend:
+    build:
+      context: /root/LocFlow/frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: https://locflow.richardnixon.dev/api
+        NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${LOCFLOW_UMAMI_WEBSITE_ID:-}
+    container_name: locflow-frontend
+    restart: unless-stopped
+    depends_on:
+      - locflow-web
+    networks:
+      - web
 
   # ===========================================
   # AUTHENTIK - SSO/2FA Identity Provider
