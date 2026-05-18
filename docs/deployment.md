@@ -39,6 +39,7 @@ Edit `infrastructure/.env` and fill in all required values. At minimum:
 - `GRAFANA_ADMIN_PASSWORD`
 - `CROWDSEC_BOUNCER_KEY` — generated after first CrowdSec startup (see step 6)
 - `AUTHENTIK_SECRET_KEY`, `AUTHENTIK_DB_PASSWORD`
+- `FORGEJO_DB_PASSWORD`, `FORGEJO_SECRET_KEY`, `FORGEJO_INTERNAL_TOKEN`, `FORGEJO_OAUTH2_JWT_SECRET` — see Forgejo section below for generation commands
 
 ## 4. Start core services
 
@@ -47,7 +48,7 @@ cd infrastructure
 docker compose up -d
 ```
 
-This starts all services: Traefik, PostgreSQL, Redis, Django, Celery, WordPress, Umami, Grafana, Prometheus, LocFlow, EireScope, Authentik.
+This starts all services: Traefik, PostgreSQL, Redis, Django, Celery, WordPress, Umami, Grafana, Prometheus, LocFlow, EireScope, Authentik, Forgejo.
 
 Traefik automatically provisions Let's Encrypt SSL certificates.
 
@@ -129,3 +130,91 @@ All services are behind Traefik (ports 80/443). No service exposes ports directl
 | Grafana | 3000 | status.richardnixon.dev |
 | Portainer | 9443 | portainer.richardnixon.dev |
 | Authentik | 9000 | auth.richardnixon.dev |
+| Forgejo | 3000 (HTTP), 2222 (SSH on host) | git.richardnixon.dev |
+
+## Forgejo (git.richardnixon.dev)
+
+Self-hosted Git forge with public repository browsing and SSO via Authentik.
+
+### Generate secrets
+
+```bash
+echo "FORGEJO_DB_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)"
+echo "FORGEJO_SECRET_KEY=$(openssl rand -base64 48 | tr -d '\n')"
+echo "FORGEJO_INTERNAL_TOKEN=$(openssl rand -base64 64 | tr -d '\n')"
+echo "FORGEJO_OAUTH2_JWT_SECRET=$(openssl rand -base64 32 | tr -d '=' | tr '+/' '-_')"
+```
+
+Paste the output into `infrastructure/.env`.
+
+### Bootstrap the admin user
+
+Registration is disabled (`DISABLE_REGISTRATION=true`), so create the first admin via the CLI:
+
+```bash
+docker compose exec -u git forgejo forgejo admin user create \
+  --username <yourname> --email <you@example.com> --admin \
+  --password "$(openssl rand -base64 18)" --must-change-password=false
+```
+
+(`admin` is a reserved name in Forgejo — use a different username.)
+
+### SSH cloning
+
+Forgejo SSH listens on host port **2222** (port 22 is used by the host's sshd). Clone URL format:
+
+```
+ssh://git@git.richardnixon.dev:2222/<user>/<repo>.git
+```
+
+### Wiring up Authentik SSO (OIDC)
+
+1. In Authentik admin (`auth.richardnixon.dev`), create an **OAuth2/OpenID Provider** with redirect URI `https://git.richardnixon.dev/user/oauth2/Authentik/callback` (the `Authentik` segment is the source name in step 4 — case-sensitive).
+2. Create an **Application** bound to that provider with slug `forgejo`.
+3. Copy the Client ID and Client Secret into `.env` as `FORGEJO_OIDC_CLIENT_ID` / `FORGEJO_OIDC_CLIENT_SECRET`.
+4. Register the source in Forgejo via CLI:
+
+   ```bash
+   docker compose exec -u git forgejo forgejo admin auth add-oauth \
+     --name Authentik \
+     --provider openidConnect \
+     --key "$FORGEJO_OIDC_CLIENT_ID" \
+     --secret "$FORGEJO_OIDC_CLIENT_SECRET" \
+     --auto-discover-url "https://auth.richardnixon.dev/application/o/forgejo/.well-known/openid-configuration" \
+     --scopes "openid profile email"
+   ```
+
+The compose already sets `oauth2_client.ENABLE_AUTO_REGISTRATION=true` and `ACCOUNT_LINKING=auto`, so existing accounts whose email matches the Authentik user are linked automatically, and new Authentik users get a Forgejo account on first login.
+
+Provisioning the provider via the Authentik shell (alternative to the admin UI):
+
+```bash
+docker compose exec authentik-server ak shell -c '
+from authentik.flows.models import Flow
+from authentik.providers.oauth2.models import OAuth2Provider, ClientTypes, IssuerMode, ScopeMapping, RedirectURI, RedirectURIMatchingMode
+from authentik.core.models import Application
+from authentik.crypto.models import CertificateKeyPair
+
+flow = Flow.objects.get(slug="default-provider-authorization-implicit-consent")
+key = CertificateKeyPair.objects.exclude(key_data="").first()
+scopes = ScopeMapping.objects.filter(managed__in=[
+    "goauthentik.io/providers/oauth2/scope-openid",
+    "goauthentik.io/providers/oauth2/scope-email",
+    "goauthentik.io/providers/oauth2/scope-profile",
+])
+p, _ = OAuth2Provider.objects.update_or_create(name="Forgejo", defaults=dict(
+    client_type=ClientTypes.CONFIDENTIAL, authorization_flow=flow, signing_key=key,
+    issuer_mode=IssuerMode.PER_PROVIDER))
+p.redirect_uris = [RedirectURI(matching_mode=RedirectURIMatchingMode.STRICT,
+    url="https://git.richardnixon.dev/user/oauth2/Authentik/callback")]
+p.save()
+p.property_mappings.set(scopes)
+Application.objects.update_or_create(slug="forgejo", defaults=dict(
+    name="Forgejo", provider=p, meta_launch_url="https://git.richardnixon.dev/"))
+print("CLIENT_ID=" + p.client_id); print("CLIENT_SECRET=" + p.client_secret)
+'
+```
+
+### Observability
+
+Forgejo metrics are exposed unauthenticated on the `monitoring` network at `forgejo:3000/metrics` and scraped automatically by Prometheus (job `forgejo`). Logs flow into Loki via Promtail like every other container.

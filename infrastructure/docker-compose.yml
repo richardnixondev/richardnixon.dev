@@ -680,6 +680,93 @@ services:
     networks:
       - authentik-internal
 
+  # ===========================================
+  # FORGEJO - Git Hosting (git.richardnixon.dev)
+  # ===========================================
+  forgejo-db:
+    image: postgres:16-alpine
+    container_name: forgejo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: forgejo
+      POSTGRES_USER: forgejo
+      POSTGRES_PASSWORD: ${FORGEJO_DB_PASSWORD}
+    volumes:
+      - forgejo-db-data:/var/lib/postgresql/data
+    networks:
+      - forgejo-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forgejo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:11
+    container_name: forgejo
+    restart: unless-stopped
+    depends_on:
+      forgejo-db:
+        condition: service_healthy
+    environment:
+      USER_UID: "1000"
+      USER_GID: "1000"
+      FORGEJO__database__DB_TYPE: postgres
+      FORGEJO__database__HOST: forgejo-db:5432
+      FORGEJO__database__NAME: forgejo
+      FORGEJO__database__USER: forgejo
+      FORGEJO__database__PASSWD: ${FORGEJO_DB_PASSWORD}
+      FORGEJO__server__DOMAIN: git.richardnixon.dev
+      FORGEJO__server__ROOT_URL: https://git.richardnixon.dev/
+      FORGEJO__server__SSH_DOMAIN: git.richardnixon.dev
+      FORGEJO__server__SSH_PORT: "2222"
+      FORGEJO__server__SSH_LISTEN_PORT: "22"
+      FORGEJO__server__START_SSH_SERVER: "false"
+      FORGEJO__server__LFS_START_SERVER: "false"
+      FORGEJO__server__OFFLINE_MODE: "false"
+      FORGEJO__server__LANDING_PAGE: explore
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__service__ALLOW_ONLY_EXTERNAL_REGISTRATION: "true"
+      FORGEJO__service__REQUIRE_SIGNIN_VIEW: "false"
+      FORGEJO__service__DEFAULT_KEEP_EMAIL_PRIVATE: "true"
+      FORGEJO__service__ENABLE_BASIC_AUTHENTICATION: "false"
+      FORGEJO__oauth2_client__ENABLE_AUTO_REGISTRATION: "true"
+      FORGEJO__oauth2_client__ACCOUNT_LINKING: auto
+      FORGEJO__oauth2_client__USERNAME: nickname
+      FORGEJO__oauth2_client__UPDATE_AVATAR: "true"
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__security__SECRET_KEY: ${FORGEJO_SECRET_KEY}
+      FORGEJO__security__INTERNAL_TOKEN: ${FORGEJO_INTERNAL_TOKEN}
+      FORGEJO__oauth2__JWT_SECRET: ${FORGEJO_OAUTH2_JWT_SECRET}
+      FORGEJO__metrics__ENABLED: "true"
+      FORGEJO__log__MODE: console
+      FORGEJO__log__LEVEL: info
+      FORGEJO__openid__ENABLE_OPENID_SIGNIN: "false"
+      FORGEJO__openid__ENABLE_OPENID_SIGNUP: "false"
+    volumes:
+      - forgejo-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "2222:22"
+    networks:
+      - web
+      - forgejo-internal
+      - monitoring
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/api/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.forgejo.rule=Host(`git.richardnixon.dev`)"
+      - "traefik.http.routers.forgejo.entrypoints=websecure"
+      - "traefik.http.routers.forgejo.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.forgejo.middlewares=crowdsec-bouncer@file"
+      - "traefik.http.services.forgejo.loadbalancer.server.port=3000"
+
 networks:
   web:
     driver: bridge
@@ -698,6 +785,8 @@ networks:
   valheim-net:
     driver: bridge
   authentik-internal:
+    driver: bridge
+  forgejo-internal:
     driver: bridge
 
 volumes:
@@ -725,3 +814,5 @@ volumes:
   authentik-redis-data:
   authentik-media:
   authentik-templates:
+  forgejo-data:
+  forgejo-db-data:

@@ -13,6 +13,7 @@ graph TD
     Traefik --> WP[WordPress<br>richardemanu.com]
     Traefik --> LocFlow[LocFlow API<br>locflow.richardnixon.dev]
     Traefik --> EireScope[EireScope<br>eirescope.richardnixon.dev]
+    Traefik --> Forgejo[Forgejo<br>git.richardnixon.dev]
     Traefik --> Umami[Umami Analytics<br>analytics.richardnixon.dev]
     Traefik --> Grafana[Grafana<br>status.richardnixon.dev]
     Traefik --> Portainer[Portainer<br>portainer.richardnixon.dev]
@@ -21,6 +22,7 @@ graph TD
     Platform --> PlatformDB[(PostgreSQL + Redis<br>+ Celery)]
     LocFlow --> LocFlowDB[(PostgreSQL)]
     Umami --> UmamiDB[(PostgreSQL)]
+    Forgejo --> ForgejoDB[(PostgreSQL)]
     WP --> WPDB[(MariaDB)]
     Grafana --> Prometheus[Prometheus + Loki]
     VStatus --> Valheim[Valheim Server<br>UDP:2456-2458]
@@ -34,6 +36,7 @@ graph TD
 | WordPress | richardemanu.com | Personal site |
 | LocFlow | locflow.richardnixon.dev | Localization automation platform (REST API) |
 | EireScope | eirescope.richardnixon.dev | OSINT dashboard |
+| Forgejo | git.richardnixon.dev | Self-hosted Git forge (public repos, SSO via Authentik) |
 | Umami | analytics.richardnixon.dev | Privacy-focused analytics |
 | Grafana | status.richardnixon.dev | Observability dashboards |
 | Portainer | portainer.richardnixon.dev | Docker management |
@@ -84,6 +87,7 @@ graph TD
 | redis | redis-exporter:9121 | Redis stats |
 | crowdsec | crowdsec:6060 | Security metrics |
 | valheim | valheim-metrics:3903 | Game server metrics |
+| forgejo | forgejo:3000 | Git forge metrics (repos, users, HTTP) |
 
 ## Project Structure
 
@@ -185,6 +189,16 @@ See `infrastructure/.env.example` for all required variables:
 |----------|-------------|
 | `EIRESCOPE_SECRET_KEY` | EireScope secret key |
 | `EIRESCOPE_UMAMI_WEBSITE_ID` | Umami website ID for tracking |
+
+### Forgejo
+| Variable | Description |
+|----------|-------------|
+| `FORGEJO_DB_PASSWORD` | Forgejo PostgreSQL password |
+| `FORGEJO_SECRET_KEY` | Internal session/cookie secret |
+| `FORGEJO_INTERNAL_TOKEN` | API token for internal RPC |
+| `FORGEJO_OAUTH2_JWT_SECRET` | JWT secret for Forgejo's OAuth2 provider |
+| `FORGEJO_OIDC_CLIENT_ID` | Authentik OIDC client ID (optional, for SSO) |
+| `FORGEJO_OIDC_CLIENT_SECRET` | Authentik OIDC client secret (optional, for SSO) |
 
 ### Valheim
 | Variable | Description |
